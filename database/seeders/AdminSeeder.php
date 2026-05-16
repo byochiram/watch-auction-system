@@ -14,8 +14,8 @@ class AdminSeeder extends Seeder
             ['username' => 'Superadmin'],
             [
                 'name' => 'Superadmin Lelang',
-                'email' => 'admin@lelangjam.local',
-                'password' => Hash::make('password'),
+                'email' => 'superadmin@tempusauctions.com',
+                'password' => Hash::make('@adminTempus2468'),
                 'role' => 'SUPERADMIN',
                 'status' => 'ACTIVE',
                 'email_verified_at' => now(),
