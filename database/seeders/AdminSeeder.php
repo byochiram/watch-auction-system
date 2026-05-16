@@ -18,7 +18,7 @@ class AdminSeeder extends Seeder
             [
                 'name'=>'Superadmin Lelang',
                 'username' => 'Superadmin',
-                'password'=>bcrypt('password'),
+                'password'=>bcrypt('@adminTempus2468'),
                 'role'=>'SUPERADMIN',
                 'status'=>'ACTIVE',
                 'email_verified_at'=>now(),
