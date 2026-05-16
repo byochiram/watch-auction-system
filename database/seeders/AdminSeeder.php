@@ -3,25 +3,22 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         User::updateOrCreate(
-            ['email'=>'superadmin@tempusauctions.com'],
+            ['username' => 'Superadmin'],
             [
-                'name'=>'Superadmin Lelang',
-                'username' => 'Superadmin',
-                'password'=>bcrypt('@adminTempus2468'),
-                'role'=>'SUPERADMIN',
-                'status'=>'ACTIVE',
-                'email_verified_at'=>now(),
+                'name' => 'Superadmin Lelang',
+                'email' => 'admin@lelangjam.local',
+                'password' => Hash::make('password'),
+                'role' => 'SUPERADMIN',
+                'status' => 'ACTIVE',
+                'email_verified_at' => now(),
             ]
         );
     }
