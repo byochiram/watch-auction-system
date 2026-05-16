@@ -22,7 +22,7 @@
               <div class="flex gap-2">
                   <button type="button"
                           class="rounded-lg bg-blue-600 text-white px-3 py-2 text-sm hover:bg-blue-500"
-                          @click="createOpen = true">
+                          @click="openCreate()">
                       + Tambah Lelang
                   </button>
               </div>
@@ -227,224 +227,218 @@
 
 
     {{-- MODAL: CREATE --}}
-<div x-show="createOpen"
-     x-cloak
-     class="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto">
-    <div class="absolute inset-0 bg-black/50" @click="createOpen = false"></div>
-    <div class="relative w-full max-w-xl mx-4 sm:mx-0 mt-10 mb-6 rounded-xl bg-white shadow-xl p-6 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold">Tambah Lelang Baru</h3>
-            <button @click="createOpen = false">✕</button>
-        </div>
+    <div x-show="createOpen"
+        x-cloak
+        class="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto">
+        <div class="absolute inset-0 bg-black/50" @click="createOpen = false"></div>
+        <div class="relative w-full max-w-xl mx-4 sm:mx-0 mt-10 mb-6 rounded-xl bg-white shadow-xl p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Tambah Lelang Baru</h3>
+                <button @click="createOpen = false">✕</button>
+            </div>
 
-        <form method="POST" action="{{ route('lots.store') }}"
-              @submit.prevent="confirmAndSubmit($el,'Konfirmasi','Simpan lot baru?','Simpan')">
-            @csrf
-            <div class="grid grid-cols-1 gap-4">
-                <div>
-                    <label class="text-sm font-medium">
-                        Produk <span class="text-red-500">*</span>
-                    </label>
+            <form x-ref="createForm" method="POST" action="{{ route('lots.store') }}" novalidate
+                @submit.prevent="confirmAndSubmit($el,'Konfirmasi','Simpan lot baru?','Simpan')">
+                @csrf
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="text-sm font-medium">
+                            Produk <span class="text-red-500">*</span>
+                        </label>
 
-                    @if($productsAvailable->isEmpty())
-                        <select class="w-full rounded border-gray-300 bg-gray-100 text-slate-500" disabled>
-                            <option>
-                                Tidak ada produk tersedia.
-                                Silakan tambah produk terlebih dahulu.
-                            </option>
-                        </select>
-                    @else
-                        <select name="product_id" class="w-full rounded border-gray-300" required>
-                            <option value="">-- Pilih Produk --</option>
-                            @foreach($productsAvailable as $p)
-                                @php
-                                    $lastLot = $p->auctionLots->first();
-                                    $suffix  = '';
-
-                                    if ($lastLot) {
-                                        $st = $lastLot->runtime_status;
-                                        if (in_array($st, ['CANCELLED','ENDED','UNSOLD'])) {
-                                            $suffix = " ({$st})";
-                                        }
-                                    }
-                                @endphp
-                                <option value="{{ $p->id }}">
-                                    #{{ $p->id }} - {{ $p->brand }} - {{ $p->model }}{{ $suffix }}
+                        @if($productsAvailable->isEmpty())
+                            <select class="w-full rounded border-gray-300 bg-gray-100 text-slate-500" disabled>
+                                <option>
+                                    Tidak ada produk tersedia.
+                                    Silakan tambah produk terlebih dahulu.
                                 </option>
-                            @endforeach
-                        </select>
-                    @endif
+                            </select>
+                        @else
+                            <select name="product_id" class="w-full rounded border-gray-300" required>
+                                <option value="">-- Pilih Produk --</option>
+                                @foreach($productsAvailable as $p)
+                                    @php
+                                        $lastLot = $p->auctionLots->first();
+                                        $suffix  = '';
+
+                                        if ($lastLot) {
+                                            $st = $lastLot->runtime_status;
+                                            if (in_array($st, ['CANCELLED','ENDED','UNSOLD'])) {
+                                                $suffix = " ({$st})";
+                                            }
+                                        }
+                                    @endphp
+                                    <option value="{{ $p->id }}">
+                                        #{{ $p->id }} - {{ $p->brand }} - {{ $p->model }}{{ $suffix }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-sm font-medium">
+                                Harga Awal <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" min="0" step="0.01" name="start_price"
+                                class="w-full rounded border-gray-300" required/>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">
+                                Increment <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" min="0.01" step="0.01" name="increment"
+                                class="w-full rounded border-gray-300" required/>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-sm font-medium">
+                                Mulai <span class="text-red-500">*</span>
+                            </label>
+                            <input type="datetime-local" name="start_at"
+                                class="w-full rounded border-gray-300" required/>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">
+                                Selesai <span class="text-red-500">*</span>
+                            </label>
+                            <input type="datetime-local" name="end_at"
+                                class="w-full rounded border-gray-300" required/>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-sm font-medium">
-                            Harga Awal <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" min="0" step="0.01" name="start_price"
-                               class="w-full rounded border-gray-300" required/>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium">
-                            Increment <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" min="0.01" step="0.01" name="increment"
-                               class="w-full rounded border-gray-300" required/>
-                    </div>
+                <div class="mt-6 flex justify-end gap-2">
+                    <button type="button" class="px-4 py-2 rounded bg-slate-100" @click="createOpen = false">Batal</button>
+                    <button type="submit"
+                            class="px-4 py-2 rounded bg-yellow-500 font-semibold text-slate-900
+                                @if($productsAvailable->isEmpty()) opacity-60 cursor-not-allowed @endif"
+                            @if($productsAvailable->isEmpty()) disabled @endif>
+                        Simpan
+                    </button>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-sm font-medium">
-                            Mulai <span class="text-red-500">*</span>
-                        </label>
-                        <input type="datetime-local" name="start_at"
-                               class="w-full rounded border-gray-300"
-                               min="{{ now()->format('Y-m-d') }}T00:00" required/>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium">
-                            Selesai <span class="text-red-500">*</span>
-                        </label>
-                        <input type="datetime-local" name="end_at"
-                               class="w-full rounded border-gray-300"
-                               min="{{ now()->format('Y-m-d') }}T00:00" required/>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-6 flex justify-end gap-2">
-                <button type="button" class="px-4 py-2 rounded bg-slate-100" @click="createOpen = false">Batal</button>
-                <button type="submit"
-                        class="px-4 py-2 rounded bg-yellow-500 font-semibold text-slate-900
-                              @if($productsAvailable->isEmpty()) opacity-60 cursor-not-allowed @endif"
-                        @if($productsAvailable->isEmpty()) disabled @endif>
-                    Simpan
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
-
 
     {{-- MODAL: EDIT --}}
-<div x-show="editOpen" x-cloak class="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto">
-    <div class="absolute inset-0 bg-black/50" @click="closeEdit()"></div>
-    <div class="relative w-full max-w-xl mx-4 sm:mx-0 mt-10 mb-6 rounded-xl bg-white shadow-xl p-6 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold">Edit Lelang</h3>
-            <button @click="closeEdit()">✕</button>
-        </div>
+    <div x-show="editOpen" x-cloak class="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto">
+        <div class="absolute inset-0 bg-black/50" @click="closeEdit()"></div>
+        <div class="relative w-full max-w-xl mx-4 sm:mx-0 mt-10 mb-6 rounded-xl bg-white shadow-xl p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Edit Lelang</h3>
+                <button @click="closeEdit()">✕</button>
+            </div>
 
-        <form method="POST" :action="updateAction"
-              @submit.prevent="confirmAndSubmit($el,'Konfirmasi','Simpan perubahan lot?','Simpan')">
-            @csrf @method('PUT')
-            <input type="hidden" name="tab" :value="tab">
+            <form x-ref="editForm" method="POST" :action="updateAction" novalidate
+                @submit.prevent="confirmAndSubmit($el,'Konfirmasi','Simpan perubahan lot?','Simpan')">
+                @csrf @method('PUT')
+                <input type="hidden" name="tab" :value="tab">
 
-            <div class="grid grid-cols-1 gap-4">
-                {{-- PRODUK --}}
-                <div>
-                    <label class="text-sm font-medium">
-                        Produk <span class="text-red-500">*</span>
-                    </label>
+                <div class="grid grid-cols-1 gap-4">
+                    {{-- PRODUK --}}
+                    <div>
+                        <label class="text-sm font-medium">
+                            Produk <span class="text-red-500">*</span>
+                        </label>
 
-                    @if($editProducts->isEmpty())
-                        <select class="w-full rounded border-gray-300 bg-gray-100 text-slate-500" disabled>
-                            <option>Tidak ada produk yang dapat dipilih.</option>
-                        </select>
-                    @else
-                        <select name="product_id"
+                        @if($editProducts->isEmpty())
+                            <select class="w-full rounded border-gray-300 bg-gray-100 text-slate-500" disabled>
+                                <option>Tidak ada produk yang dapat dipilih.</option>
+                            </select>
+                        @else
+                            <select name="product_id"
+                                    class="w-full rounded border-gray-300"
+                                    x-model="form.product_id"
+                                    :disabled="isActiveLot"
+                                    required>
+                                @foreach($editProducts as $p)
+                                    <option value="{{ $p->id }}">
+                                        #{{ $p->id }} - {{ $p->brand }} - {{ $p->model }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
+                    </div>
+
+                    {{-- HARGA & INCREMENT --}}
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-sm font-medium">
+                                Harga Awal <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text"
+                                name="start_price"
+                                x-model="form.start_price"
                                 class="w-full rounded border-gray-300"
-                                x-model="form.product_id"
+                                required
                                 :disabled="isActiveLot"
-                                required>
-                            @foreach($editProducts as $p)
-                                <option value="{{ $p->id }}">
-                                    #{{ $p->id }} - {{ $p->brand }} - {{ $p->model }}
-                                </option>
-                            @endforeach
-                        </select>
-                    @endif
-                </div>
+                                oninput="this.value = this.value
+                                        .replace(/[^0-9]/g,'')
+                                        .replace(/\B(?=(\d{3})+(?!\d))/g,'.')" />
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">
+                                Increment <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text"
+                                name="increment"
+                                x-model="form.increment"
+                                class="w-full rounded border-gray-300"
+                                required
+                                :disabled="isActiveLot"
+                                oninput="this.value = this.value
+                                        .replace(/[^0-9]/g,'')
+                                        .replace(/\B(?=(\d{3})+(?!\d))/g,'.')" />
+                        </div>
+                    </div>
 
-                {{-- HARGA & INCREMENT --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-sm font-medium">
-                            Harga Awal <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text"
-                               name="start_price"
-                               x-model="form.start_price"
-                               class="w-full rounded border-gray-300"
-                               required
-                               :disabled="isActiveLot"
-                               oninput="this.value = this.value
-                                    .replace(/[^0-9]/g,'')
-                                    .replace(/\B(?=(\d{3})+(?!\d))/g,'.')" />
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium">
-                            Increment <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text"
-                               name="increment"
-                               x-model="form.increment"
-                               class="w-full rounded border-gray-300"
-                               required
-                               :disabled="isActiveLot"
-                               oninput="this.value = this.value
-                                    .replace(/[^0-9]/g,'')
-                                    .replace(/\B(?=(\d{3})+(?!\d))/g,'.')" />
-                    </div>
-                </div>
-
-                {{-- TANGGAL --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-sm font-medium">
-                            Mulai <span class="text-red-500">*</span>
-                        </label>
-                        <input type="datetime-local"
-                               name="start_at"
-                               x-model="form.start_at"
-                               class="w-full rounded border-gray-300"
-                               min="{{ now()->format('Y-m-d') }}T00:00"
-                               :disabled="isActiveLot"
-                               required />
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium">
-                            Selesai <span class="text-red-500">*</span>
-                        </label>
-                        <input type="datetime-local"
-                               name="end_at"
-                               x-model="form.end_at"
-                               class="w-full rounded border-gray-300"
-                               min="{{ now()->format('Y-m-d') }}T00:00"
-                               required />
-                        @error('end_at')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
+                    {{-- TANGGAL --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-sm font-medium">
+                                Mulai <span class="text-red-500">*</span>
+                            </label>
+                            <input type="datetime-local"
+                                name="start_at"
+                                x-model="form.start_at"
+                                class="w-full rounded border-gray-300"
+                                :disabled="isActiveLot"
+                                required />
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">
+                                Selesai <span class="text-red-500">*</span>
+                            </label>
+                            <input type="datetime-local"
+                                name="end_at"
+                                x-model="form.end_at"
+                                class="w-full rounded border-gray-300"
+                                required />
+                            @error('end_at')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- INFO ACTIVE --}}
-            <p x-show="isActiveLot"
-               class="mb-4 mt-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-                Catatan: Lelang sedang berjalan. Anda hanya dapat mengubah
-                <span class="font-semibold">Waktu Selesai</span>.
-            </p>
+                {{-- INFO ACTIVE --}}
+                <p x-show="isActiveLot"
+                class="mb-4 mt-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                    Catatan: Lelang sedang berjalan. Anda hanya dapat mengubah
+                    <span class="font-semibold">Waktu Selesai</span>.
+                </p>
 
-            <div class="mt-6 flex justify-end gap-2">
-                <button type="button" class="px-4 py-2 rounded bg-slate-100" @click="closeEdit()">Batal</button>
-                <button type="submit" class="px-4 py-2 rounded bg-yellow-500 font-semibold text-slate-900">Simpan</button>
-            </div>
-        </form>
+                <div class="mt-6 flex justify-end gap-2">
+                    <button type="button" class="px-4 py-2 rounded bg-slate-100" @click="closeEdit()">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded bg-yellow-500 font-semibold text-slate-900">Simpan</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
 
     {{-- MODAL: CANCEL --}}
     <div x-show="cancelOpen" x-cloak class="fixed inset-0 z-[110] flex items-start justify-center overflow-y-auto">
@@ -491,168 +485,317 @@
   </div>
 
   {{-- Scripts --}}
-  <script>
-function lotPage (initialTab = 'scheduled') {
-  return {
-    tab: initialTab,
-    createOpen: false,
-    editOpen: false,
-    cancelOpen: false,
-    cancelAction: '#',
-    cancelReason: '',
-    updateAction: '#',
-    form: {},
-    isActiveLot: false,
-    baseUrl: "{{ route('lots.index') }}",
+    <script>
+        function lotPage (initialTab = 'scheduled') {
+            return {
+                tab: initialTab,
 
-    init() {
-      this._wirePagination();
-    },
+                // modal states
+                createOpen: false,
+                editOpen: false,
+                cancelOpen: false,
 
-    changeTab(newTab) {
-      this.tab = newTab;
+                // actions
+                cancelAction: '#',
+                cancelReason: '',
+                updateAction: '#',
 
-      if (this.$refs.filterForm) {
-        const tabInput = this.$refs.filterForm.querySelector('input[name="tab"]');
-        if (tabInput) tabInput.value = newTab;
-      }
+                // form state
+                form: {},
+                isActiveLot: false,
 
-      const url = new URL(window.location.href);
-      url.searchParams.set('tab', newTab);
-      history.replaceState({}, '', url.toString());
-    },
+                // base
+                baseUrl: "{{ route('lots.index') }}",
 
-    formatNumberString(value) {
-      if (value === null || value === undefined || value === '') return '';
+                init() {
+                    this._wirePagination();
 
-      const num = Number(value);
-      if (isNaN(num)) return '';
+                    // reopen create modal kalau gagal validasi server
+                    @if(session('reopen_create'))
+                        this.createOpen = true;
+                    @endif
 
-      const intStr = Math.round(num).toString();
-      return intStr.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-    },
+                    // reopen edit modal kalau gagal validasi server (kalau kamu sudah pakai flash reopen_edit)
+                    @if(session('reopen_edit'))
+                        const d = @json(session('reopen_edit'));
+                        this.openEdit(d);
+                    @endif
+                },
 
-    openEdit(data) {
-      this.form = { ...data };
-      this.isActiveLot = (data.runtime_status === 'ACTIVE');
+                changeTab(newTab) {
+                this.tab = newTab;
 
-      this.form.start_price = this.formatNumberString(this.form.start_price);
-      this.form.increment   = this.formatNumberString(this.form.increment);
+                if (this.$refs.filterForm) {
+                    const tabInput = this.$refs.filterForm.querySelector('input[name="tab"]');
+                    if (tabInput) tabInput.value = newTab;
+                }
 
-      this.updateAction = `/admin/lots/${data.id}`;
-      this.editOpen = true;
-    },
+                const url = new URL(window.location.href);
+                url.searchParams.set('tab', newTab);
+                history.replaceState({}, '', url.toString());
+                },
 
-    closeEdit() { this.editOpen = false; },
+                // ========= helpers =========
+                formatNumberString(value) {
+                    if (value === null || value === undefined || value === '') return '';
+                    const num = Number(value);
+                    if (isNaN(num)) return '';
+                    const intStr = Math.round(num).toString();
+                    return intStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                },
 
-    async confirmAndSubmit(formEl, title, msg, yes='OK') {
-  const startInput       = formEl.querySelector('input[name="start_at"]');
-  const endInput         = formEl.querySelector('input[name="end_at"]');
-  const startPriceInput  = formEl.querySelector('input[name="start_price"]');
-  const incrementInput   = formEl.querySelector('input[name="increment"]');
+                parseMoney(val) {
+                    // "1.000.000" -> 1000000
+                    if (val === null || val === undefined) return NaN;
+                    const digits = String(val).replace(/[^\d]/g, '');
+                    return digits ? Number(digits) : NaN;
+                },
 
-  // reset custom error dulu
-  [endInput, startPriceInput, incrementInput].forEach(el => {
-    if (el) el.setCustomValidity('');
-  });
+                toLocalDatetimeValue(d) {
+                    const pad = (n) => String(n).padStart(2,'0');
+                    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                },
 
-  // === VALIDASI TANGGAL: end > start ===
-  if (startInput && endInput) {
-    const s = startInput.value;
-    const e = endInput.value;
+                nowMinValue() {
+                    const now = new Date();
+                    now.setSeconds(0,0);
+                    return this.toLocalDatetimeValue(now);
+                },
 
-    if (s && e && e <= s) {
-      endInput.setCustomValidity('Waktu selesai harus setelah waktu mulai.');
-    } else {
-      endInput.setCustomValidity('');
-    }
-  }
+                // ambil form yang sedang aktif (create/edit) supaya querySelector tidak nyasar
+                getFormEls(formEl) {
+                    return {
+                        start: formEl.querySelector('input[name="start_at"]'),
+                        end:   formEl.querySelector('input[name="end_at"]'),
+                        sp:    formEl.querySelector('input[name="start_price"]'),
+                        inc:   formEl.querySelector('input[name="increment"]'),
+                    };
+                },
 
-  // === VALIDASI HARGA AWAL ===
-  if (startPriceInput) {
-    const v = Number(startPriceInput.value);
+                // set aturan min untuk start/end:
+                // - start.min = nowMin (kalau start editable)
+                // - end.min = max(nowMin, start.value)
+                // - jika end <= min -> dorong ke min
+                syncMinDatetime(formEl) {
+                    const { start, end } = this.getFormEls(formEl);
+                    if (!start || !end) return;
 
-    if (Number.isNaN(v)) {
-      startPriceInput.setCustomValidity('Harga awal wajib diisi.');
-    } else if (v < 0) {
-      startPriceInput.setCustomValidity('Harga awal tidak boleh negatif.');
-    } else {
-      startPriceInput.setCustomValidity('');
-    }
-  }
+                    const nowMin = this.nowMinValue();
 
-  // === VALIDASI INCREMENT ===
-  if (incrementInput) {
-    const v = Number(incrementInput.value);
+                    // start only editable when scheduled
+                    if (!start.disabled) {
+                        start.min = nowMin;
+                        if (start.value && start.value < nowMin) start.value = nowMin;
+                }
 
-    if (Number.isNaN(v)) {
-      incrementInput.setCustomValidity('Increment wajib diisi.');
-    } else if (v < 0.01) {
-      // sesuaikan kalau mau minimal 1, 10.000, dll
-      incrementInput.setCustomValidity('Increment minimal 0.01.');
-    } else {
-      incrementInput.setCustomValidity('');
-    }
-  }
+                const s = start.value || nowMin;
+                const endMin = (s > nowMin) ? s : nowMin;
 
-  // kalau masih ada error, browser tampilkan pesan dan stop
-  if (!formEl.reportValidity()) {
-    return;
-  }
+                end.min = endMin;
+                    if (end.value && end.value <= endMin) end.value = endMin;
 
-  // popup konfirmasi
-  const ok = await Alpine.store('dialog').confirm({
-    title,
-    message: msg,
-    confirmText: yes,
-  });
+                    // update end.min saat start berubah (kalau start editable)
+                    if (!start.disabled) {
+                        start.onchange = () => {
+                        const nowMin2 = this.nowMinValue();
+                        const s2 = start.value || nowMin2;
+                        const m2 = (s2 > nowMin2) ? s2 : nowMin2;
+                        end.min = m2;
+                        if (end.value && end.value <= m2) end.value = m2;
+                        };
+                    }
+                },
 
-  if (ok) formEl.submit();
-},
+                // ========= open/close modals =========
+                openCreate() {
+                    this.createOpen = true;
 
+                    this.$nextTick(() => {
+                        if (this.$refs.createForm) this.syncMinDatetime(this.$refs.createForm);
+                    });
+                },
 
-    openCancel(actionUrl) {
-      this.cancelAction = actionUrl;
-      this.cancelReason = '';
-      this.cancelOpen = true;
-    },
+                openEdit(data) {
+                    this.form = { ...data };
+                    this.isActiveLot = (data.runtime_status === 'ACTIVE');
 
-    closeCancel() { this.cancelOpen = false; },
+                    // format angka (edit pakai text dengan titik)
+                    this.form.start_price = this.formatNumberString(this.form.start_price);
+                    this.form.increment   = this.formatNumberString(this.form.increment);
 
-    applyFilter() {
-      const form = this.$refs.filterForm;
-      const params = new URLSearchParams(new FormData(form));
-      this._swap(`${this.baseUrl}?${params.toString()}`);
-    },
+                    this.updateAction = `/admin/lots/${data.id}`;
+                    this.editOpen = true;
 
-    async _swap(url) {
-      const res  = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
-      const html = await res.text();
-      const tmp  = document.createElement('div');
-      tmp.innerHTML = html;
+                    this.$nextTick(() => {
+                        if (this.$refs.editForm) this.syncMinDatetime(this.$refs.editForm);
+                    });
+                },
 
-      const newWrap = tmp.querySelector('[x-ref="tableWrap"]');
-      if (newWrap && this.$refs.tableWrap) {
-        this.$refs.tableWrap.innerHTML = newWrap.innerHTML;
-      }
+                closeEdit() { this.editOpen = false; },
 
-      this._wirePagination();
-      history.replaceState({}, '', url);
-    },
+                openCancel(actionUrl) {
+                    this.cancelAction = actionUrl;
+                    this.cancelReason = '';
+                    this.cancelOpen = true;
+                },
 
-    _wirePagination() {
-      if (!this.$refs.tableWrap) return;
-      this.$refs.tableWrap
-        .querySelectorAll('a[href*="page="]')
-        .forEach(a => {
-          a.addEventListener('click', (e) => {
-            e.preventDefault();
-            this._swap(a.href);
-          }, { once: true });
-        });
-    },
-  }
-}
-</script>
+                closeCancel() { this.cancelOpen = false; },
+
+                // ========= submit with native tooltip (seperti "nilai terlalu kecil") =========
+                async confirmAndSubmit(formEl, title, msg, yes='OK') {
+                    const { start, end, sp, inc } = this.getFormEls(formEl);
+
+                    // reset semua custom error
+                    [start, end, sp, inc].forEach(el => el && el.setCustomValidity(''));
+
+                    const nowMin = this.nowMinValue(); // "YYYY-MM-DDTHH:mm"
+
+                    const isEditable = (el) => el && !el.disabled;
+
+                    const parseNumberField = (el) => {
+                        if (!el) return NaN;
+                        if (el.type === 'number') return Number(el.value);
+                        return this.parseMoney(el.value); // text "1.000.000" -> 1000000
+                    };
+                    
+                    // VALIDASI BISNIS 
+                    
+                    // START
+                    if (isEditable(start)) {
+                        if (!start.value) start.setCustomValidity('Waktu mulai wajib diisi.');
+                        else if (start.value < nowMin) start.setCustomValidity('Waktu mulai tidak boleh sebelum waktu saat ini.');
+                    }
+
+                    // END
+                    if (end) {
+                        if (!end.value) end.setCustomValidity('Waktu selesai wajib diisi.');
+                        else {
+                        const s = start ? start.value : null;
+                        const e = end.value;
+
+                        if (s && e <= s) end.setCustomValidity('Waktu selesai harus setelah waktu mulai.');
+                        else if (e <= nowMin) end.setCustomValidity('Waktu selesai harus setelah waktu saat ini.');
+                        }
+                    }
+
+                    // START PRICE
+                    if (isEditable(sp)) {
+                        const v = parseNumberField(sp);
+                        if (Number.isNaN(v)) sp.setCustomValidity('Harga awal wajib diisi.');
+                        else if (v < 0) sp.setCustomValidity('Harga awal tidak boleh negatif.');
+                    }
+
+                    // INCREMENT
+                    if (isEditable(inc)) {
+                        const v = parseNumberField(inc);
+                        if (Number.isNaN(v)) inc.setCustomValidity('Increment wajib diisi.');
+                        else {
+                        const minInc = (inc.type === 'number') ? 0.01 : 1;
+                        if (v < minInc) inc.setCustomValidity(`Increment minimal ${minInc}.`);
+                        }
+                    }
+
+                    // OVERRIDE VALIDITY NATIVE
+                    
+                    const forceNativeMessage = (el, map) => {
+                        if (!el || !el.validity) return;
+
+                        // kalau sudah ada error custom dari kita, jangan ditimpa
+                        if (el.validity.customError) return;
+
+                        if (el.validity.valueMissing && map.valueMissing) {
+                        el.setCustomValidity(map.valueMissing);
+                        return;
+                        }
+                        if (el.validity.rangeUnderflow && map.rangeUnderflow) {
+                        el.setCustomValidity(map.rangeUnderflow);
+                        return;
+                        }
+                        if (el.validity.stepMismatch && map.stepMismatch) {
+                        el.setCustomValidity(map.stepMismatch);
+                        return;
+                        }
+                        if (el.validity.badInput && map.badInput) {
+                        el.setCustomValidity(map.badInput);
+                        return;
+                        }
+                    };
+
+                    // datetime-local
+                    forceNativeMessage(start, {
+                        valueMissing: 'Waktu mulai wajib diisi.',
+                        rangeUnderflow: 'Waktu mulai tidak boleh sebelum waktu saat ini.',
+                        badInput: 'Format waktu mulai tidak valid.',
+                    });
+
+                    forceNativeMessage(end, {
+                        valueMissing: 'Waktu selesai wajib diisi.',
+                        rangeUnderflow: 'Waktu selesai tidak valid.',
+                        badInput: 'Format waktu selesai tidak valid.',
+                    });
+
+                    // number/text price & increment
+                    forceNativeMessage(sp, {
+                        valueMissing: 'Harga awal wajib diisi.',
+                        rangeUnderflow: 'Harga awal tidak boleh negatif.',
+                        stepMismatch: 'Format harga tidak valid.',
+                        badInput: 'Harga awal harus berupa angka.',
+                    });
+
+                    forceNativeMessage(inc, {
+                        valueMissing: 'Increment wajib diisi.',
+                        rangeUnderflow: (inc && inc.type === 'number') ? 'Increment minimal 0.01.' : 'Increment minimal 1.',
+                        stepMismatch: 'Format increment tidak valid.',
+                        badInput: 'Increment harus berupa angka.',
+                    });
+
+                    // STOP kalau invalid (tooltip keluar)
+                    if (!formEl.reportValidity()) return;
+
+                    const ok = await Alpine.store('dialog').confirm({
+                        title,
+                        message: msg,
+                        confirmText: yes,
+                    });
+
+                    if (ok) formEl.submit();
+                },
+
+                // ========= filtering ajax =========
+                applyFilter() {
+                    const form = this.$refs.filterForm;
+                    const params = new URLSearchParams(new FormData(form));
+                    this._swap(`${this.baseUrl}?${params.toString()}`);
+                },
+
+                async _swap(url) {
+                    const res  = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
+                    const html = await res.text();
+                    const tmp  = document.createElement('div');
+                    tmp.innerHTML = html;
+
+                    const newWrap = tmp.querySelector('[x-ref="tableWrap"]');
+                    if (newWrap && this.$refs.tableWrap) {
+                        this.$refs.tableWrap.innerHTML = newWrap.innerHTML;
+                }
+
+                this._wirePagination();
+                    history.replaceState({}, '', url);
+                },
+
+                _wirePagination() {
+                    if (!this.$refs.tableWrap) return;
+                    this.$refs.tableWrap
+                        .querySelectorAll('a[href*="page="]')
+                        .forEach(a => {
+                        a.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            this._swap(a.href);
+                        }, { once: true });
+                    });
+                },
+            }
+        }
+    </script>
 
 </x-app-layout>

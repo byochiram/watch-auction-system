@@ -8,7 +8,7 @@ return [
 
     // kurir default untuk hit ongkir (pisahkan koma)
     'default_couriers'    => env('RAJAONGKIR_DEFAULT_COURIERS',
-        'lion,jnt,jne,pos,sicepat,sap,rex,ide,ninja'
+        'jnt,jne'
     ),
 
     'enabled'     => env('RAJAONGKIR_ENABLED', true),

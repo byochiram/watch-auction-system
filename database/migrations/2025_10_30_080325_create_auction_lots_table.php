@@ -14,10 +14,9 @@ return new class extends Migration
         Schema::create('auction_lots', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->string('title');
             $table->decimal('start_price',14,2);
             $table->decimal('increment',14,2)->default(1);
-            $table->decimal('current_price',14,2)->nullable();
+            $table->decimal('current_price',14,2);
             $table->timestamp('start_at')->useCurrent();
             $table->timestamp('end_at')->useCurrent();
             $table->timestamp('cancelled_at')->nullable()->index();

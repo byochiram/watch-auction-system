@@ -165,41 +165,90 @@
 
                 {{-- Tombol Watchlist di kanan --}}
                 @auth
-                    <button type="button"
-                        data-watchlist-button
-                        data-url="{{ route('watchlist.toggle', $lot) }}"
-                        data-watchlisted="{{ $isWatchlisted ? '1' : '0' }}"
-                        class="inline-flex items-center justify-center rounded-full
-                            w-8 h-8 border
-                            {{ $isWatchlisted
-                                    ? 'border-slate-900 bg-slate-900 text-white'
-                                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50' }}"
-                        title="{{ $isWatchlisted ? 'Hapus dari Watchlist' : 'Tambahkan ke Watchlist' }}">
+                    @php
+                        $u = auth()->user();
 
-                        {{-- Heart outline --}}
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="w-4 h-4 icon-heart-outline {{ $isWatchlisted ? 'hidden' : '' }}"
-                            viewBox="0 0 16 16" fill="currentColor">
-                            <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815
-                                    2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385
-                                    C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1
-                                    .176-.17C12.72-3.042 23.333 4.867 8 15"/>
-                        </svg>
+                        $isBidder    = method_exists($u, 'isBidder') ? $u->isBidder() : (($u->role ?? null) === 'BIDDER');
+                        $isSuspended = method_exists($u,'isSuspended') && $u->isSuspended();
+                        $isVerified  = method_exists($u,'hasVerifiedEmail') ? $u->hasVerifiedEmail() : !is_null($u->email_verified_at);
 
-                        {{-- Heart filled --}}
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="w-4 h-4 icon-heart-fill {{ $isWatchlisted ? '' : 'hidden' }}"
-                            viewBox="0 0 16 16" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
-                        </svg>
-                    </button>
+                        $canWatchlist = $isBidder && $isVerified && ! $isSuspended;
+                    @endphp
+
+                    @if($canWatchlist)
+                        {{-- Bidder + verified + not suspended -> AJAX toggle --}}
+                        <button type="button"
+                            data-watchlist-button
+                            data-url="{{ route('watchlist.toggle', $lot) }}"
+                            data-watchlisted="{{ $isWatchlisted ? '1' : '0' }}"
+                            class="inline-flex items-center justify-center rounded-full
+                                w-8 h-8 border
+                                {{ $isWatchlisted
+                                        ? 'border-slate-900 bg-slate-900 text-white'
+                                        : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50' }}"
+                            title="{{ $isWatchlisted ? 'Hapus dari Watchlist' : 'Tambahkan ke Watchlist' }}">
+
+                            {{-- Heart outline --}}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-4 h-4 icon-heart-outline {{ $isWatchlisted ? 'hidden' : '' }}"
+                                viewBox="0 0 16 16" fill="currentColor">
+                                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815
+                                        2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385
+                                        C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1
+                                        .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                            </svg>
+
+                            {{-- Heart filled --}}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-4 h-4 icon-heart-fill {{ $isWatchlisted ? '' : 'hidden' }}"
+                                viewBox="0 0 16 16" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
+                            </svg>
+                        </button>
+
+                    @elseif($isBidder && ! $isVerified)
+                        {{-- Bidder tapi belum verifikasi -> arahkan ke halaman verifikasi --}}
+                        <a href="{{ route('verification.notice') }}"
+                            class="inline-flex items-center justify-center rounded-full
+                                w-8 h-8 border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                            title="Verifikasi email terlebih dahulu untuk menggunakan watchlist">
+
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-4 h-4"
+                                viewBox="0 0 16 16" fill="currentColor">
+                                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815
+                                        2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385
+                                        C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1
+                                        .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                            </svg>
+                        </a>
+
+                    @else
+                        {{-- Suspended atau Admin -> disabled --}}
+                        <button type="button"
+                            disabled
+                            class="inline-flex items-center justify-center rounded-full
+                                w-8 h-8 border border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed"
+                            title="{{ $isSuspended ? 'Akun sedang ditangguhkan' : 'Admin tidak dapat menggunakan watchlist' }}">
+
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-4 h-4"
+                                viewBox="0 0 16 16" fill="currentColor">
+                                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815
+                                        2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385
+                                        C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1
+                                        .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                            </svg>
+                        </button>
+                    @endif
                 @else
-                    {{-- kalau belum login, arahkan ke login --}}
+                    {{-- belum login -> arahkan ke login --}}
                     <a href="{{ route('login') }}"
-                    class="inline-flex items-center justify-center rounded-full
+                        class="inline-flex items-center justify-center rounded-full
                             w-9 h-9 border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-                    title="Login untuk menambahkan ke watchlist">
+                        title="Login untuk menambahkan ke watchlist">
+
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 icon-heart-outline"
                             viewBox="0 0 16 16" fill="currentColor" >
                             <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815

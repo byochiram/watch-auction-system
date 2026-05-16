@@ -1,3 +1,4 @@
+{{-- resources/views/auth/verify-email.blade.php --}}
 <x-auth-layout>
     <div
         x-data="{ showEditEmail: {{ $errors->has('email') ? 'true' : 'false' }} }"

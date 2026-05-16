@@ -182,6 +182,9 @@
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50/80
                                         text-sm text-slate-700 px-3 py-2.5
                                         focus:border-slate-500 focus:ring-2 focus:ring-slate-200">
+                            <p id="priceError"
+                                class="hidden mt-2 text-xs text-red-600 font-medium">
+                            </p>
                         </div>
 
                         {{-- Status --}}
@@ -267,7 +270,7 @@
                 @endif
             </div>
 
-            {{-- CTA NEWSLETTER / NOTIFIKASI --}}
+            <!-- {{-- CTA NEWSLETTER / NOTIFIKASI --}}
             <div class="mt-16">
                 <div
                     class="rounded-3xl border border-slate-200/80 bg-slate-50/80
@@ -344,7 +347,7 @@
                     </div>
 
                 </div>
-            </div>
+            </div> -->
         </div>
     </section>
 
@@ -405,6 +408,29 @@
                 return params;
             }
 
+            function showPriceError(message) {
+                const el = document.getElementById('priceError');
+                if (!el) return;
+
+                el.textContent = message;
+                el.classList.remove('hidden');
+
+                // kasih border merah di input
+                minInput?.classList.add('border-red-500');
+                maxInput?.classList.add('border-red-500');
+            }
+
+            function clearPriceError() {
+                const el = document.getElementById('priceError');
+                if (!el) return;
+
+                el.textContent = '';
+                el.classList.add('hidden');
+
+                minInput?.classList.remove('border-red-500');
+                maxInput?.classList.remove('border-red-500');
+            }
+
             // ====== Attach Load More untuk state params tertentu ======
             function attachLoadMore() {
                 const loadMoreBtn = document.getElementById('loadMoreBtn');
@@ -455,6 +481,16 @@
 
             // ====== Apply filter via AJAX ======
             const applyFilters = debounce(async () => {
+                const minVal = minInput?.value !== '' ? Number(minInput.value) : null;
+                const maxVal = maxInput?.value !== '' ? Number(maxInput.value) : null;
+
+                if (minVal !== null && maxVal !== null && minVal > maxVal) {
+                    showPriceError('Rentang harga tidak valid. Nilai minimum tidak boleh lebih besar dari maksimum.');
+                    return;
+                }
+
+                clearPriceError();
+
                 const params = buildParamsFromUI();
                 currentParams = new URLSearchParams(params.toString()); // update state
 
@@ -467,6 +503,12 @@
                     const res = await fetch(newUrl, {
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
+
+                    if (res.status === 422) {
+                        const data = await res.json();
+                        showPriceError(data.error ?? 'Rentang harga tidak valid.');
+                        return;
+                    }
 
                     if (!res.ok) throw new Error('Gagal memuat data');
 

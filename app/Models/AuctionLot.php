@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Payment;
 use App\Notifications\AuctionWonNotification;
+use App\Notifications\AuctionLostNotification;
 
 class AuctionLot extends Model
 {
@@ -196,6 +198,27 @@ class AuctionLot extends Model
         $winnerUser = $this->winnerUser; // accessor yang sudah ada di model
         if ($winnerUser && $payment) {
             $winnerUser->notify(new AuctionWonNotification($this, $payment));
+        }
+
+        // ambil semua user yang pernah bid
+        $bidderUsers = $this->bids
+            ->map(fn ($bid) => $bid->bidderProfile?->user)
+            ->filter()
+            ->unique('id');
+
+        // exclude pemenang
+        $bidderUsers = $bidderUsers->reject(
+            fn ($user) => $winnerUser && $user->id === $winnerUser->id
+        );
+
+        foreach ($bidderUsers as $user) {
+            // key unik per lot + user
+            $cacheKey = "auction_loser_notified:lot_{$this->id}:user_{$user->id}";
+
+            // hanya kirim kalau belum pernah
+            if (Cache::add($cacheKey, true, now()->addDays(30))) {
+                $user->notify(new AuctionLostNotification($this));
+            }
         }
     }
 }

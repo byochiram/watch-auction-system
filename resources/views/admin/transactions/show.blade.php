@@ -310,7 +310,7 @@
 
                                 <div>
                                     <dt class="text-slate-500 text-xs">Alamat</dt>
-                                    <dd class="text-slate-800 whitespace-pre-line">
+                                    <dd class="text-slate-800">
                                         {{ $payment->address ?: '—' }}
                                     </dd>
                                 </div>

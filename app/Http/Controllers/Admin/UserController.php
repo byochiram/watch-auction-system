@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class UserController extends Controller
 {
@@ -254,35 +255,48 @@ class UserController extends Controller
     {
         $currentUser = $request->user();
 
-        // Hanya superadmin
-        if (! $currentUser->isSuperAdmin()) {
-            abort(403, 'Hanya superadmin yang dapat mereset password admin.');
-        }
-
-        // Hanya boleh reset akun ADMIN, bukan BIDDER
+        if (! $currentUser->isSuperAdmin()) abort(403);
         if ($user->role !== 'ADMIN') {
             return back()->with('error', 'Reset password dari panel admin hanya untuk akun ADMIN.');
         }
-
-        // Jangan izinkan reset password dirinya sendiri dari sini
         if ($user->id === $currentUser->id) {
             return back()->with('error', 'Anda tidak dapat mereset password Anda sendiri dari sini.');
         }
 
-        // Validasi input dari modal
-        $data = $request->validate([
-            'password'           => 'required|string|min:8|confirmed',
-            'admin_password'     => 'required|string',  // password superadmin
+        // Validator manual supaya bisa “paksa” modal tetap kebuka saat gagal
+        $validator = Validator::make($request->all(), [
+            'password' => [
+                'required',
+                'confirmed',
+                PasswordRule::min(8)->letters()->numbers(),
+            ],
+            'admin_password' => [
+                'required',
+                'string',
+            ],
+        ], [
+            'password.confirmed' => 'Konfirmasi password baru tidak sama.',
         ]);
 
-        // Cek password superadmin
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('modal', 'reset-admin')           // ✅ tanda modal reset harus kebuka
+                ->with('reset_user_id', $user->id);     // ✅ biar tahu modal untuk user siapa
+        }
+
+        $data = $validator->validated();
+
+        // cek password superadmin benar
         if (! Hash::check($data['admin_password'], $currentUser->password)) {
             return back()
                 ->withErrors(['admin_password' => 'Password superadmin tidak sesuai.'])
-                ->withInput();
+                ->withInput()
+                ->with('modal', 'reset-admin')
+                ->with('reset_user_id', $user->id);
         }
 
-        // Setel password baru admin
         $user->password = Hash::make($data['password']);
         $user->save();
 

@@ -52,7 +52,13 @@ class ShippingController extends Controller
 
     public function provinces(RajaOngkirService $ro)
     {
-        return response()->json($ro->provinces());
+        try {
+            return response()->json($ro->provinces());
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 502);
+        }
     }
 
     public function cities(Request $request, RajaOngkirService $ro)
@@ -70,12 +76,11 @@ class ShippingController extends Controller
     }
 
     /* ---------- Ubah alamat pengiriman untuk 1 payment ---------- */
-
     public function updateAddress(Payment $payment, Request $request)
     {
         $this->ensureEditable($payment);
 
-        $data = $request->validate([
+        $data = $request->validateWithBag('shippingAddress', [
             'address'        => 'required|string|max:500',
             'province_id'    => 'required|integer',
             'province_name'  => 'required|string|max:100',
@@ -87,17 +92,31 @@ class ShippingController extends Controller
             'phone'          => ['required','regex:/^[0-9]{9,13}$/'],
         ]);
 
+        // Normalisasi phone: simpan jadi +62xxxxxxxxxx
+        $phoneDigits = preg_replace('/\D/', '', $data['phone']); // harusnya sudah angka
+        if (str_starts_with($phoneDigits, '0')) {
+            $phoneDigits = ltrim($phoneDigits, '0');
+        }
+        if (!str_starts_with($phoneDigits, '62')) {
+            // input kamu biasanya mulai 8xxxx
+            $phoneNormalized = '+62'.$phoneDigits;
+        } else {
+            $phoneNormalized = '+'.$phoneDigits;
+        }
+
         $payment->update([
+            // alamat
             'address'                         => $data['address'],
             'province'                        => $data['province_name'],
             'city'                            => $data['city_name'],
             'district'                        => $data['district_name'],
-            'village'                         => $data['village'] ?? null,
-            'postal_code'                     => $data['postal_code'] ?? null,
-            'phone'                           => $data['phone'] ?? $payment->phone,
-            'shipping_rajaongkir_district_id' => $data['district_id'],
+            'postal_code'                     => $data['postal_code'],
+            'phone'                           => $phoneNormalized,
 
-            // reset ongkir karena tujuan pengiriman berubah
+            // rajaongkir destination id (yang dipakai hitung ongkir)
+            'shipping_rajaongkir_district_id' => (int) $data['district_id'],
+
+            // ✅ reset ongkir karena tujuan pengiriman berubah
             'shipping_courier'      => null,
             'shipping_service'      => null,
             'shipping_fee'          => 0,
@@ -141,6 +160,18 @@ class ShippingController extends Controller
         try {
             $optionsRaw = $ro->calculateDomesticCostByDistrict($origin, $destination, (int) $weight);
             $options    = $this->mapOptions($optionsRaw);
+
+            $allowed = [
+                'jne' => ['REG'], // kalau mau tambah YES tinggal ['REG','YES']
+                'jnt' => ['EZ'],
+            ];
+
+            $options = array_values(array_filter($options, function ($opt) use ($allowed) {
+                $code = strtolower($opt['code'] ?? '');
+                $svc  = strtoupper($opt['service'] ?? '');
+
+                return isset($allowed[$code]) && in_array($svc, $allowed[$code], true);
+            }));
         } catch (\Throwable $e) {
             Log::error('RajaOngkir calculate error', [
                 'payment_id'  => $payment->id,

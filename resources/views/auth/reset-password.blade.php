@@ -1,3 +1,4 @@
+{{-- resources/views/auth/reset-password.blade.php --}}
 <x-auth-layout>
     <div class="h-screen w-full flex items-center justify-center bg-slate-50">
         <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8">

@@ -77,6 +77,14 @@
                 }
             }
         }
+        $hasAddress = !empty($payment->address)
+            && !empty($payment->postal_code)
+            && !empty($payment->phone)
+            && !empty($payment->shipping_rajaongkir_district_id);
+
+        $hasShipping = !empty($payment->shipping_courier) && (int)$payment->shipping_fee > 0;
+
+        $readyToPay = $hasAddress && $hasShipping;
     @endphp
 
     <div class="max-w-screen-xl mx-auto px-4 space-y-6">
@@ -215,7 +223,7 @@
 
                 {{-- Alamat & Ongkos Kirim --}}
                 <section
-                        x-data="shippingForm(@js($canEditShipping))"
+                        x-data="shippingForm(@js($canEditShipping), @js($errors->shippingAddress->any()))"
                         x-init="init()"
                         class="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 sm:p-5 space-y-4"
                     >
@@ -275,8 +283,11 @@
                                 <textarea name="address"
                                         x-model="addressLine"
                                         rows="2"
-                                        class="mt-1 w-full rounded-md border-slate-300 text-sm"
+                                        class="placeholder:text-slate-400 mt-1 w-full rounded-md border-slate-300 text-sm"
                                         placeholder="Nama jalan, nomor rumah, RT/RW, dsb"></textarea>
+                                @error('address', 'shippingAddress')
+                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             {{-- Baris 1 & 2: Provinsi/Kecamatan di kiri, Kota + (Kode pos & No HP) di kanan --}}
@@ -293,6 +304,9 @@
                                                 <option :value="p.id" x-text="p.name"></option>
                                             </template>
                                         </select>
+                                        @error('province_id', 'shippingAddress')
+                                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     <div>
@@ -305,6 +319,9 @@
                                                 <option :value="d.id" x-text="d.name"></option>
                                             </template>
                                         </select>
+                                        @error('district_id', 'shippingAddress')
+                                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                        @enderror
                                     </div>
                                 </div>
 
@@ -320,6 +337,9 @@
                                                 <option :value="c.id" x-text="c.name"></option>
                                             </template>
                                         </select>
+                                        @error('city_id', 'shippingAddress')
+                                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                        @enderror
                                     </div>
 
                                     {{-- Kode pos kecil + No HP (lebih lebar) --}}
@@ -332,6 +352,9 @@
                                                 name="postal_code"
                                                 x-model="postalCode"
                                                 class="mt-1 w-full rounded-md border-slate-300 text-sm" />
+                                            @error('postal_code', 'shippingAddress')
+                                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                            @enderror
                                         </div>
 
                                         {{-- No HP: 2 kolom (lebih lebar) --}}
@@ -414,6 +437,13 @@
                                 </div>
                             </div>
                         </form>
+                        @if($errors->shippingAddress->any())
+                            <script>
+                                document.addEventListener('DOMContentLoaded', () => {
+                                window.$toast?.error(@json($errors->shippingAddress->first()));
+                                });
+                            </script>
+                        @endif
                     @endif
 
                     {{-- Ongkos kirim --}}
@@ -465,14 +495,14 @@
 
                             <div class="flex flex-col items-end">
                                 <button type="button"
-                                        @click="canEdit ? fetchOptions('{{ route('shipping.options', $payment) }}') : null"
-                                        :disabled="!canEdit || loading || (hasCalculated && options.length)"
-                                        :class="[
-                                            'inline-flex items-center mr-2 px-3 py-1.5 rounded-md text-xs font-semibold',
-                                            (!canEdit || loading || (hasCalculated && options.length))
-                                                ? 'bg-slate-300 text-slate-600 cursor-not-allowed'
-                                                : 'bg-slate-900 text-white hover:bg-slate-800'
-                                        ]">
+                                    @click="(canEdit && hasAddressDistrict) ? fetchOptions('{{ route('shipping.options', $payment) }}') : null"
+                                    :disabled="!canEdit || !hasAddressDistrict || loading || (hasCalculated && options.length)"
+                                    :class="[
+                                        'inline-flex items-center mr-2 px-3 py-1.5 rounded-md text-xs font-semibold',
+                                        (!canEdit || !hasAddressDistrict || loading || (hasCalculated && options.length))
+                                            ? 'bg-slate-300 text-slate-600 cursor-not-allowed'
+                                            : 'bg-slate-900 text-white hover:bg-slate-800'
+                                    ]">
                                     <span x-show="!loading">Hitung Ongkos Kirim</span>
                                     <span x-show="loading">Menghitung...</span>
                                 </button>
@@ -531,14 +561,23 @@
 
                             <div class="flex justify-end pt-2">
                                 <button type="button"
-                                        @click="canEdit ? confirmSelection('{{ route('shipping.select', $payment) }}') : null"
-                                        :disabled="!canEdit"
-                                        :class="[
-                                            'inline-flex items-center px-4 py-1.5 rounded-md text-xs font-semibold',
-                                            canEdit
-                                                ? 'bg-slate-900 text-white hover:bg-slate-800'
-                                                : 'bg-slate-300 text-slate-600 cursor-not-allowed'
-                                        ]">
+                                    @click="
+                                        if(!canEdit) return;
+
+                                        if(!selectedKey) {
+                                            showPopup('error', 'Kurir belum dipilih', 'Silakan pilih salah satu jasa kirim dulu.');
+                                            return;
+                                        }
+
+                                        confirmSelection('{{ route('shipping.select', $payment) }}')
+                                        "
+                                    :disabled="!canEdit"
+                                    :class="[
+                                        'inline-flex items-center px-4 py-1.5 rounded-md text-xs font-semibold',
+                                        canEdit
+                                            ? 'bg-slate-900 text-white hover:bg-slate-800'
+                                            : 'bg-slate-300 text-slate-600 cursor-not-allowed'
+                                    ]">
                                     Konfirmasi Pilihan Kurir
                                 </button>
                             </div>
@@ -554,6 +593,31 @@
                             </div>
                         @endif
                     </template>
+
+                    <div x-show="popup.open" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+                        <div class="absolute inset-0 bg-black/40" @click="closePopup()"></div>
+
+                        <div class="relative w-full max-w-sm rounded-xl bg-white shadow-lg p-4">
+                            <div class="flex items-start gap-3">
+                                <div class="mt-0.5">
+                                    <span x-show="popup.type==='success'" class="text-emerald-600 font-bold">✓</span>
+                                    <span x-show="popup.type==='error'" class="text-red-600 font-bold">!</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-slate-900" x-text="popup.title"></p>
+                                    <p class="text-sm text-slate-600 mt-1" x-text="popup.message"></p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 flex justify-end">
+                                <button type="button"
+                                    class="px-4 py-2 rounded-md bg-slate-900 text-white text-sm font-semibold"
+                                    @click="closePopup()">
+                                    OK
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </section>
             </div>
 
@@ -593,13 +657,32 @@
                     {{-- Tombol aksi --}}
                     <div class="mt-4 space-y-2">
                         @if($status === 'PENDING' && ! $isExpired)
-                            <a href="{{ route('checkout.show', $payment) }}"
-                            class="inline-flex w-full items-center justify-center rounded-full px-4 py-2 text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800">
-                                Bayar via Duitku
-                            </a>
-                            <p class="text-[11px] text-slate-500">
-                                Anda akan diarahkan ke halaman pembayaran Duitku di tab baru.
-                            </p>
+                            @if($readyToPay)
+                                <a href="{{ route('checkout.show', $payment) }}"
+                                class="inline-flex w-full items-center justify-center rounded-full px-4 py-2 text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800">
+                                    Bayar via Duitku
+                                </a>
+                                <p class="text-[11px] text-slate-500">
+                                    Anda akan diarahkan ke halaman pembayaran Duitku di tab baru.
+                                </p>
+                            @else
+                                <button type="button" disabled
+                                    class="inline-flex w-full items-center justify-center rounded-full px-4 py-2 text-sm font-semibold bg-slate-300 text-slate-600 cursor-not-allowed">
+                                    Bayar via Duitku
+                                </button>
+
+                                <div class="mt-2 text-[11px] text-slate-600 space-y-1">
+                                    <p class="font-semibold text-slate-700">Sebelum bayar, lengkapi dulu:</p>
+
+                                    @if(! $hasAddress)
+                                        <p>• Alamat pengiriman (detail, provinsi/kota/kecamatan, kode pos, no HP)</p>
+                                    @endif
+
+                                    @if(! $hasShipping)
+                                        <p>• Hitung ongkos kirim & konfirmasi pilihan kurir</p>
+                                    @endif
+                                </div>
+                            @endif
                         @elseif($status === 'PAID')
                             <p class="text-xs text-slate-500">
                                 Simpan invoice ini sebagai bukti pembayaran.
@@ -699,7 +782,7 @@
                                 </button> -->
 
                                 <button type="button"
-                                        @click="markCompleted()"
+                                        @click="openConfirmComplete()"
                                         :disabled="!canComplete"
                                         :class="[
                                             'inline-flex items-center px-3 py-1.5 rounded-full border text-[12px] font-semibold',
@@ -712,16 +795,46 @@
                             </div>
                         </div>
                     </div>
+
+                    <div x-show="confirmOpen" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+                        <div class="absolute inset-0 bg-black/40" @click="closeConfirm()"></div>
+
+                        <div class="relative w-full max-w-sm rounded-xl bg-white shadow-lg p-4">
+                            <p class="text-sm font-semibold text-slate-900">Konfirmasi Pesanan Selesai</p>
+                            <p class="text-sm text-slate-600 mt-1">
+                            Apakah Anda yakin barang sudah diterima? Tindakan ini tidak dapat dibatalkan.
+                            </p>
+
+                            <div class="mt-4 flex justify-end gap-2">
+                            <button type="button"
+                                    class="px-4 py-2 rounded-md border border-slate-300 text-slate-700 text-sm font-semibold"
+                                    @click="closeConfirm()"
+                                    :disabled="completing">
+                                Batal
+                            </button>
+
+                            <button type="button"
+                                    class="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
+                                    @click="markCompleted()"
+                                    :disabled="completing">
+                                <span x-show="!completing">Ya, Sudah Diterima</span>
+                                <span x-show="completing">Memproses...</span>
+                            </button>
+                            </div>
+                        </div>
+                    </div>
                 </section>
             </div>
         </div>
     </div>
 
     <script>
-        function shippingForm(canEdit = false) {
+        function shippingForm(canEdit = false, hasAddressErrors = false) {
             return {
                 // flag dari backend: boleh edit (PENDING & belum expired)
                 canEdit: !!canEdit,
+                hasAddressErrors: !!hasAddressErrors,
+                editAddress: false,
 
                 // URL AJAX
                 provincesUrl: "{{ route('rajaongkir.provinces') }}",
@@ -763,7 +876,10 @@
                 hasAddressDistrict: {{ $payment->shipping_rajaongkir_district_id ? 'true' : 'false' }},
 
                 init() {
-                    // lazy load province nanti saat form dibuka
+                if (this.canEdit && this.hasAddressErrors) {
+                    this.editAddress = true;
+                    if (this.provinces.length === 0) this.loadProvinces();
+                }
                 },
 
                 toggleEditAddress() {
@@ -865,15 +981,24 @@
                     return (opt.code || '') + '::' + (opt.service || '');
                 },
 
+                notify(type, message) {
+                    // type: 'success' | 'error' | 'info'
+                    if (window.$toast && typeof window.$toast[type] === 'function') {
+                        window.$toast[type](message);
+                    } else {
+                        alert(message); // fallback popup
+                    }
+                },
+
                 confirmSelection(url) {
                     if (!this.selectedKey) {
-                        window.$toast?.error('Pilih salah satu jasa kirim terlebih dahulu.');
+                        this.showPopup('error', 'Kurir belum dipilih', 'Silakan pilih salah satu jasa kirim dulu.');
                         return;
                     }
 
                     const opt = this.options.find(o => this.makeKey(o) === this.selectedKey);
                     if (!opt) {
-                        window.$toast?.error('Pilihan kurir tidak dikenal.');
+                        this.showPopup('error', 'Pilihan tidak valid', 'Pilihan kurir tidak dikenal. Silakan hitung ulang ongkos kirim.');
                         return;
                     }
 
@@ -885,17 +1010,46 @@
 
                     fetch(url, {
                         method: 'POST',
-                        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
                         body: fd
-                    }).then(async (r) => {
+                    })
+                    .then(async (r) => {
                         if (!r.ok) {
                             const t = await r.text();
                             console.error('Shipping select error', r.status, t);
-                            window.$toast?.error('Gagal menyimpan pilihan kurir.');
+                            this.showPopup('error', 'Gagal', 'Gagal menyimpan pilihan kurir. Coba lagi ya.');
                             return;
                         }
-                        window.location.reload();
+
+                        // SUCCESS → pakai popup + reload setelah klik OK
+                        this.confirmedKey = this.selectedKey;
+
+                        this.showPopup(
+                        'success',
+                        'Berhasil',
+                        `Berhasil memilih kurir: ${opt.name} - ${opt.service}.`,
+                        'reload'
+                        );
+                    })
+                    .catch((e) => {
+                        console.error(e);
+                        this.showPopup('error', 'Error', 'Terjadi kesalahan jaringan. Coba lagi ya.');
                     });
+                },
+
+                popup: { open:false, type:'info', title:'', message:'', action:null },
+
+                showPopup(type, title, message, action=null) {
+                    this.popup = { open:true, type, title, message, action };
+                },
+                closePopup() {
+                    const action = this.popup.action;
+                    this.popup.open = false;
+                    this.popup.action = null;
+                    if (action === 'reload') window.location.reload();
                 },
 
                 formatRupiah(v) {
@@ -915,6 +1069,7 @@
                 completeUrl: completeUrl,
                 loadingTrack: false,
                 completing: false,
+                confirmOpen: false,
 
                 get canTrack() {
                     return this.status === 'SHIPPED' && this.hasTracking;
@@ -930,6 +1085,15 @@
                     // TODO: nanti integrasi RajaOngkir Tracking AWB
                     window.$toast?.info('Fitur lacak paket akan diintegrasikan dengan RajaOngkir.');
                     this.loadingTrack = false;
+                },
+
+                openConfirmComplete() {
+                    if (!this.canComplete || this.completing) return;
+                    this.confirmOpen = true;
+                },
+
+                closeConfirm() {
+                    this.confirmOpen = false;
                 },
 
                 markCompleted() {
@@ -954,6 +1118,7 @@
                     })
                     .finally(() => {
                         this.completing = false;
+                        this.confirmOpen = false;
                     });
                 }
             }

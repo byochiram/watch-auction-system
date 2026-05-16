@@ -1,3 +1,4 @@
+{{-- resources/views/auth/register.blade.php --}}
 <x-auth-layout>
     {{-- wrapper untuk state modal + layout split --}}
     <div x-data="{ showTerms: false, showPolicy: false }"
@@ -546,7 +547,7 @@
                     const data = await res.json();
 
                     if (data.exists) {
-                        usernameStatus.textContent = 'Username Sudah dipakai';
+                        usernameStatus.textContent = 'Username sudah dipakai';
                         usernameStatus.className   = 'text-[12px] text-red-600';
                     } else {
                         usernameStatus.textContent = 'Username Tersedia ✓';
@@ -573,7 +574,7 @@
                     const data = await res.json();
 
                     if (data.exists) {
-                        emailStatus.textContent = 'Email Sudah terdaftar';
+                        emailStatus.textContent = 'Email sudah terdaftar';
                         emailStatus.className   = 'text-[12px] text-red-600';
                     } else {
                         emailStatus.textContent = 'Email Tersedia ✓';

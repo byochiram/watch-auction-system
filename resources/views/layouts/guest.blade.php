@@ -318,68 +318,92 @@
   </header>
 
   @auth
-  @php
-      $user = Auth::user();
-      $isSuspended = $user->suspended_until && now()->lt($user->suspended_until);
-  @endphp
+    @php
+        $user = Auth::user();
 
-  @if($isSuspended && ! $user->isAdmin())
-      <div
-          id="suspended-banner"
-          class="fixed left-0 right-0
-                 top-16 md:top-20       {{-- nempel di bawah header (h-16 / md:h-20) --}}
-                 z-40
-                 bg-amber-50 border-b border-amber-200">
+        // Suspend AUTO (unpaid) -> ada tenggat
+        $isAutoSuspended = $user->status === 'SUSPENDED'
+            && $user->suspended_until
+            && now()->lt($user->suspended_until);
 
-          <div class="max-w-screen-xl mx-auto px-4 py-2.5
-                      flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3
-                      text-amber-800 text-xs sm:text-sm">
+        // Suspend MANUAL admin -> tanpa tenggat (suspended_until NULL)
+        $isManualSuspended = $user->status === 'SUSPENDED'
+            && ! $user->suspended_until;
 
-              <div class="flex items-start gap-2">
-                  {{-- ICON WARNING --}}
-                  <div class="mt-0.5 shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd"
+        // Banner tampil untuk keduanya (kecuali admin)
+        $showSuspendedBanner = ($isAutoSuspended || $isManualSuspended) && ! $user->isAdmin();
+
+        // Text berbeda biar jelas
+        $suspendTitle = $isAutoSuspended
+            ? 'Akun Anda sedang ditangguhkan hingga'
+            : 'Akun Anda sedang ditangguhkan oleh Admin';
+
+        $suspendSubtitle = $isAutoSuspended
+            ? 'Anda tetap dapat melihat lelang dan transaksi, namun tidak dapat mengikuti lelang baru selama masa penangguhan.'
+            : 'Akun Anda dibatasi sementara. Silakan hubungi Admin untuk aktivasi kembali.';
+    @endphp
+
+    @if($showSuspendedBanner)
+        <div
+            id="suspended-banner"
+            class="fixed left-0 right-0 top-16 md:top-20 z-40 bg-amber-50 border-b border-amber-200">
+
+            <div class="max-w-screen-xl mx-auto px-4 py-2.5
+                        flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3
+                        text-amber-800 text-xs sm:text-sm">
+
+                <div class="flex items-start gap-2">
+                    <div class="mt-0.5 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
                                 d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l6.518 11.59A1.75 1.75 0 0 1 16.768 18H3.232a1.75 1.75 0 0 1-1.493-3.311l6.518-11.59zM10 7a.75.75 0 0 0-.75.75v3.5a.75.75 0 0 0 1.5 0v-3.5A.75.75 0 0 0 10 7zm0 7a.9.9 0 1 0 0-1.8.9.9 0 0 0 0 1.8z"
                                 clip-rule="evenodd" />
-                      </svg>
-                  </div>
+                        </svg>
+                    </div>
 
-                  <div class="space-y-0.5">
-                      <p class="font-semibold">
-                          Akun Anda sedang ditangguhkan hingga
-                          <span class="font-bold">
-                              {{ $user->suspended_until->format('d M Y, H:i') }}
-                          </span>
-                      </p>
-                      <p class="text-[11px] sm:text-xs text-amber-900/90">
-                          Anda tetap dapat melihat lelang dan transaksi, namun tidak dapat mengikuti
-                          lelang baru selama masa penangguhan.
-                      </p>
-                  </div>
-              </div>
+                    <div class="space-y-0.5">
+                        <p class="font-semibold">
+                            {{ $suspendTitle }}
+                            @if($isAutoSuspended)
+                                <span class="font-bold">
+                                    {{ $user->suspended_until->format('d M Y, H:i') }}
+                                </span>
+                            @endif
+                        </p>
 
-              <div class="shrink-0">
-                  <a href="{{ route('rules') }}#penangguhan"
-                     class="inline-flex items-center rounded-full border border-amber-300 px-3 py-1
+                        <p class="text-[11px] sm:text-xs text-amber-900/90">
+                            {{ $suspendSubtitle }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="shrink-0">
+                    <a href="{{ route('rules') }}#penangguhan"
+                    class="inline-flex items-center rounded-full border border-amber-300 px-3 py-1
                             text-[11px] font-medium text-amber-900 hover:bg-amber-100">
-                      Lihat ketentuan
-                  </a>
-              </div>
-          </div>
-      </div>
-  @endif
-@endauth
+                        Lihat ketentuan
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
+    @endauth
 
   {{-- CONTENT --}}
     @php
-        $user = Auth::user();
-        $isSuspended = $user && $user->suspended_until && now()->lt($user->suspended_until);
+    $user = Auth::user();
+
+    $isSuspendedForPadding = $user
+        && $user->status === 'SUSPENDED'
+        && (
+            // auto suspend (unpaid)
+            ($user->suspended_until && now()->lt($user->suspended_until))
+            // manual suspend (admin)
+            || (! $user->suspended_until)
+        );
     @endphp
 
-    <main class="mx-auto max-w-7xl px-4 
-        {{ $isSuspended ? 'pt-[158px]' : 'pt-28' }} 
-        pb-16">
+    <main class="mx-auto max-w-7xl px-4 {{ $isSuspendedForPadding ? 'pt-[158px]' : 'pt-28' }} pb-16">
         {{ $slot }}
     </main>
 
@@ -576,9 +600,13 @@
             'status'  => session('status'),
         ];
 
-        // Kalau ada error validasi (misalnya bid gagal) dan belum ada flash error eksplisit:
-        if ($errors->any() && ! $flash['error']) {
-            $flash['error'] = 'Bid gagal, silakan cek kembali isian Anda.';
+        if (! $flash['error']) {
+            // hanya saat di halaman lot detail DAN error terkait bid
+            if (request()->routeIs('lots.show') && ($errors->has('amount') || $errors->has('bid_amount'))) {
+                $flash['error'] = $errors->first('amount')
+                    ?? $errors->first('bid_amount')
+                    ?? 'Bid gagal, silakan cek kembali isian Anda.';
+            }
         }
     @endphp
 

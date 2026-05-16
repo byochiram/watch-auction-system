@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('brand')->index();
-            $table->string('model')->index();
-            $table->string('category')->nullable();
+            $table->string('brand', 100)->index();
+            $table->string('model', 100)->index();
+            $table->string('category', 255)->nullable();
             $table->smallInteger('year')->nullable();
+            $table->unsignedInteger('weight_grams')->nullable();
             $table->enum('condition',['NEW','USED'])->default('USED');
             $table->text('description')->nullable();
             $table->timestamps();

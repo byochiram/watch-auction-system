@@ -9,9 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ThrottleBidRequests
 {
-    // misal: max 3 bid per detik per user/IP
-    protected int $maxAttempts  = 3;
-    protected int $decaySeconds = 1; // jendela waktu (1 detik)
+    protected int $maxAttempts  = 8; // max 8 kali bid
+    protected int $decaySeconds = 60; // jendela waktu (60 detik)
 
     /**
      * Handle an incoming request.

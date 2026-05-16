@@ -1,3 +1,4 @@
+{{-- resources/public/partials/bid_pagination.blade.php --}}
 @php
     $perPage     = $perPage ?? 12;
     $totalBids   = $totalBids ?? 0;

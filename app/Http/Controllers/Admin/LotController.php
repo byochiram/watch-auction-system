@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LotStoreRequest;
 use App\Http\Requests\LotUpdateRequest;
+use App\Notifications\AuctionCancelledNotification;
 use App\Models\AuctionLot;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -257,6 +258,17 @@ class LotController extends Controller
             'cancelled_at'  => now(),
             'cancel_reason' => $request->cancel_reason,
         ]);
+
+        $users = $lot->bids()
+            ->with('bidderProfile.user')
+            ->get()
+            ->pluck('bidderProfile.user')
+            ->filter()
+            ->unique('id');
+
+        foreach ($users as $user) {
+            $user->notify(new AuctionCancelledNotification($lot));
+        }
 
         return redirect()
             ->route('lots.index', ['tab' => $request->input('tab', 'active')])

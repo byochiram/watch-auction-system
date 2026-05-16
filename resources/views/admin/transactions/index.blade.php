@@ -1,7 +1,17 @@
 {{-- resources/views/admin/transactions/index.blade.php --}}
+@php
+  $shipPaymentId = session('ship_payment_id');
+@endphp
 <x-app-layout title="Transaksi">
     <div class="py-6"
-         x-data="txPage('{{ route('payments.index') }}', '{{ $tab }}')"
+         x-data="txPage(
+            '{{ route('payments.index') }}',
+            '{{ $tab }}',
+            {{ session('modal') === 'ship' && $errors->any() ? 'true' : 'false' }},
+            @js($shipPaymentId),
+            @js(old('shipping_courier')),
+            @js(old('shipping_tracking_no'))
+        )"
          x-init="init()">
 
         <x-slot name="header">
@@ -78,7 +88,7 @@
                                 :class="tab === 'paid'
                                     ? 'bg-slate-900 text-white'
                                     : 'bg-slate-100 text-slate-700'">
-                            Awarded
+                            Paid
                         </button>
                     </div>
                 </div>
@@ -169,7 +179,11 @@
                                    name="shipping_courier"
                                    x-model="shipForm.courier"
                                    class="w-full rounded-md border-gray-300"
+                                   maxlength="20"
                                    required>
+                            @error('shipping_courier')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div>
@@ -180,7 +194,11 @@
                                    name="shipping_tracking_no"
                                    x-model="shipForm.tracking"
                                    class="w-full rounded-md border-gray-300"
+                                   maxlength="50"
                                    required>
+                            @error('shipping_tracking_no')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
@@ -202,99 +220,107 @@
     </div>
 
     <script>
-function txPage(baseUrl, initialTab = 'pending') {
-    return {
-        baseUrl,
-        tab: initialTab || 'pending',
+        function txPage(baseUrl, initialTab='pending', initialShipOpen=false, shipPaymentId=null, oldCourier='', oldTracking='') {
+            return {
+                baseUrl,
+                tab: initialTab || 'pending',
 
-        // modal resi
-        shipOpen: false,
-        shipAction: '#',
-        shipForm: { id: null, courier: '', tracking: '' },
+                // modal resi
+                shipOpen: false,
+                shipAction: '#',
+                shipForm: { id: null, courier: '', tracking: '' },
 
-        init() {
-            this._wirePagination();
-        },
+                init() {
+                    this._wirePagination();
 
-        changeTab(newTab) {
-            this.tab = newTab;
+                    if (initialShipOpen && shipPaymentId) {
+                        this.shipForm.id = shipPaymentId;
+                        this.shipForm.courier = oldCourier || '';
+                        this.shipForm.tracking = oldTracking || '';
+                        this.shipAction = `/admin/transactions/${shipPaymentId}/shipping`;
+                        this.shipOpen = true;
+                    }
+                },
 
-            // sync ke hidden input di filterForm
-            if (this.$refs.filterForm) {
-                const tabInput = this.$refs.filterForm.querySelector('input[name="tab"]');
-                if (tabInput) tabInput.value = newTab;
+                changeTab(newTab) {
+                    this.tab = newTab;
+
+                    // sync ke hidden input di filterForm
+                    if (this.$refs.filterForm) {
+                        const tabInput = this.$refs.filterForm.querySelector('input[name="tab"]');
+                        if (tabInput) tabInput.value = newTab;
+                    }
+
+                    this.apply();
+
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('tab', newTab);
+                    history.replaceState({}, '', url.toString());
+                },
+
+                apply() {
+                    const form   = this.$refs.filterForm;
+                    const params = new URLSearchParams(new FormData(form));
+                    this._swap(`${this.baseUrl}?${params.toString()}`);
+                },
+
+                async _swap(url) {
+                    const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    const html = await res.text();
+                    const tmp  = document.createElement('div');
+                    tmp.innerHTML = html;
+
+                    const newTable = tmp.querySelector('[x-ref="tableWrap"]');
+                    const newPager = tmp.querySelector('[x-ref="pager"]');
+
+                    if (newTable && this.$refs.tableWrap) {
+                        this.$refs.tableWrap.innerHTML = newTable.innerHTML;
+                    }
+                    if (newPager && this.$refs.pager) {
+                        this.$refs.pager.innerHTML = newPager.innerHTML;
+                    }
+
+                    this._wirePagination();
+                    history.replaceState({}, '', url);
+                },
+
+                _wirePagination() {
+                    if (!this.$refs.pager) return;
+
+                    this.$refs.pager
+                        .querySelectorAll('a[href*="page="]')
+                        .forEach(a => {
+                            a.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                this._swap(a.href);
+                            }, { once: true });
+                        });
+                },
+
+                // ==== MODAL RESI (boleh tetap yang lama) ====
+                openShip(data) {
+                    this.shipForm.id       = data.id;
+                    this.shipForm.courier  = data.courier || '';
+                    this.shipForm.tracking = data.tracking || '';
+                    this.shipAction        = `/admin/transactions/${data.id}/shipping`;
+                    this.shipOpen          = true;
+                },
+                closeShip() {
+                    this.shipOpen = false;
+                },
+                async submitShip(formEl) {
+                    if (!formEl.reportValidity()) return;
+
+                    const ok = await Alpine.store('dialog')?.confirm({
+                        title: 'Konfirmasi',
+                        message: 'Simpan informasi pengiriman?',
+                        confirmText: 'Simpan',
+                    }) ?? true;
+
+                    if (ok) formEl.submit();
+                },
             }
-
-            this.apply();
-
-            const url = new URL(window.location.href);
-            url.searchParams.set('tab', newTab);
-            history.replaceState({}, '', url.toString());
-        },
-
-        apply() {
-            const form   = this.$refs.filterForm;
-            const params = new URLSearchParams(new FormData(form));
-            this._swap(`${this.baseUrl}?${params.toString()}`);
-        },
-
-        async _swap(url) {
-            const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-            const html = await res.text();
-            const tmp  = document.createElement('div');
-            tmp.innerHTML = html;
-
-            const newTable = tmp.querySelector('[x-ref="tableWrap"]');
-            const newPager = tmp.querySelector('[x-ref="pager"]');
-
-            if (newTable && this.$refs.tableWrap) {
-                this.$refs.tableWrap.innerHTML = newTable.innerHTML;
-            }
-            if (newPager && this.$refs.pager) {
-                this.$refs.pager.innerHTML = newPager.innerHTML;
-            }
-
-            this._wirePagination();
-            history.replaceState({}, '', url);
-        },
-
-        _wirePagination() {
-            if (!this.$refs.pager) return;
-
-            this.$refs.pager
-                .querySelectorAll('a[href*="page="]')
-                .forEach(a => {
-                    a.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        this._swap(a.href);
-                    }, { once: true });
-                });
-        },
-
-        // ==== MODAL RESI (boleh tetap yang lama) ====
-        openShip(data) {
-            this.shipForm.id       = data.id;
-            this.shipForm.courier  = data.courier || '';
-            this.shipForm.tracking = data.tracking || '';
-            this.shipAction        = `/admin/transactions/${data.id}/shipping`;
-            this.shipOpen          = true;
-        },
-        closeShip() {
-            this.shipOpen = false;
-        },
-        async submitShip(formEl) {
-            if (!formEl.reportValidity()) return;
-
-            const ok = await Alpine.store('dialog')?.confirm({
-                title: 'Konfirmasi',
-                message: 'Simpan informasi pengiriman?',
-                confirmText: 'Simpan',
-            }) ?? true;
-
-            if (ok) formEl.submit();
-        },
-    }
-}
-</script>
+        }
+    </script>
 
 </x-app-layout>

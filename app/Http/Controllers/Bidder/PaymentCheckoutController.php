@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Services\DuitkuService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PaymentCheckoutController extends Controller
 {
@@ -20,26 +21,49 @@ class PaymentCheckoutController extends Controller
     {
         $user = auth()->user();
 
-        // pastikan pemilik invoice
         if (! $payment->bidderProfile || $payment->bidderProfile->user_id !== $user?->id) {
             abort(403);
         }
 
-        // kalau sudah bayar → balik ke detail transaksi
-        if ($payment->status === 'PAID') {
-            return redirect()
-                ->route('transactions.show', $payment)
-                ->with('status', 'Invoice ini sudah dibayar.');
-        }
-
-        // kalau sudah expired → jangan buat invoice baru
-        if ($payment->status === 'EXPIRED') {
+        // Kalau expired by time tapi status belum keburu diupdate
+        if ($payment->expires_at && now()->gt($payment->expires_at) && $payment->status !== 'PAID') {
             return redirect()
                 ->route('transactions.show', $payment)
                 ->with('status', 'Invoice ini sudah kedaluwarsa.');
         }
 
-        // pastikan sudah punya reference & payment_url
+        if ($payment->status === 'PAID') {
+            return redirect()->route('transactions.show', $payment)
+                ->with('status', 'Invoice ini sudah dibayar.');
+        }
+
+        if ($payment->status === 'EXPIRED') {
+            return redirect()->route('transactions.show', $payment)
+                ->with('status', 'Invoice ini sudah kedaluwarsa.');
+        }
+
+        // ✅ WAJIB alamat lengkap
+        $hasAddress = filled($payment->address)
+            && filled($payment->postal_code)
+            && filled($payment->phone)
+            && filled($payment->shipping_rajaongkir_district_id);
+
+        // ✅ WAJIB kurir terkonfirmasi
+        $hasShipping = filled($payment->shipping_courier)
+            && filled($payment->shipping_service)
+            && (int) $payment->shipping_fee > 0;
+
+        if (! $hasAddress || ! $hasShipping) {
+            $msg = ! $hasAddress
+                ? 'Lengkapi alamat pengiriman terlebih dahulu sebelum melakukan pembayaran.'
+                : 'Silakan hitung ongkos kirim dan konfirmasi pilihan kurir terlebih dahulu sebelum melakukan pembayaran.';
+
+            return redirect()
+                ->route('transactions.show', $payment)
+                ->with('status', $msg);
+        }
+
+        // baru boleh create invoice Duitku
         $instructions = $payment->payment_instructions ?? [];
 
         if (empty($instructions['reference']) || empty($instructions['payment_url'])) {
@@ -56,8 +80,6 @@ class PaymentCheckoutController extends Controller
                 ->with('status', 'Gagal membuat link pembayaran. Silakan coba lagi.');
         }
 
-        // 🔥 INI BAGIAN PENTING:
-        // Langsung lempar user ke halaman pembayaran Duitku
         return redirect()->away($paymentUrl);
     }
 

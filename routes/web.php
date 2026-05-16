@@ -3,29 +3,26 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+
 use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\LotController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PaymentController;
+
 use App\Http\Controllers\Bidder\MyAuctionController;
 use App\Http\Controllers\Bidder\TransactionController;
 use App\Http\Controllers\Bidder\PaymentCheckoutController;
 use App\Http\Controllers\Bidder\ShippingController;
+
 use App\Models\User;
 use App\Models\Bid;
 
-/*
-|--------------------------------------------------------------------------
-| Jetstream / Fortify Dashboard Redirect
-|--------------------------------------------------------------------------
-| Setelah login / register, Jetstream akan redirect ke route('dashboard').
-| Di sini cek role:
-| - ADMIN  -> admin.dashboard
-| - lainnya (BIDDER, dll) -> home
-*/
+//Auth Routes (Jetstream/Fortify)
 require __DIR__.'/auth.php';
 
+//Authenticated common routes (profile + dashboard redirect)
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
@@ -37,43 +34,26 @@ Route::middleware([
         $user = auth()->user();
 
         if ($user && $user->isAdmin()) {
-            // versi admin: pakai layout app (bawaan Jetstream)
-            return view('profile.show');
+            return view('profile.show'); // admin pakai layout app
         }
 
-        // versi bidder: pakai layout guest (navbar publik)
-        return view('bidder.profile.show');
+        return view('bidder.profile.show'); // bidder pakai layout guest
     })->name('profile.show');
 
-    // Akses dashboard
+    // Redirect dashboard Jetstream berdasarkan role
     Route::get('/dashboard', function () {
         $user = auth()->user();
 
-        if (! $user) {
-            return redirect()->route('home');
-        }
+        if (! $user) return redirect()->route('home');
 
-        // ADMIN / SUPERADMIN
-        if ($user->isAdmin()) {
-            return redirect()->route('admin.dashboard');
-        }
+        if ($user->isAdmin())  return redirect()->route('admin.dashboard');
+        if ($user->isBidder()) return redirect()->route('home');
 
-        // BIDDER
-        if ($user->isBidder()) {
-            return redirect()->route('home');
-        }
-
-        // fallback
         return redirect()->route('home');
     })->name('dashboard');
-
 });
 
-/*
-|--------------------------------------------------------------------------
-| Guest & Bidder Area
-|--------------------------------------------------------------------------
-*/
+//GUEST & BIDDER AREA
 Route::get  ('/',                     [HomeController::class, 'index'])->name('home');
 Route::get  ('/lots/{lot}',           [HomeController::class, 'show'])->name('lots.show'); 
 Route::get  ('/lots/{lot}/poll',      [HomeController::class, 'poll'])->name('lots.poll');
@@ -85,21 +65,15 @@ Route::view ('/privacy-policy',     'policy')->name('policy.show');
 
 Route::get  ('/check-username', function (Request $request) {
     $exists = User::where('username', $request->get('username'))->exists();
-
-    return response()->json([
-        'exists' => $exists,
-    ]);
+    return response()->json(['exists' => $exists]);
 })->name('check.username');
 
 Route::get  ('/check-email', function (Request $request) {
     $exists = User::where('email', $request->get('email'))->exists();
-
-    return response()->json([
-        'exists' => $exists,
-    ]);
+    return response()->json(['exists' => $exists]);
 })->name('check.email');
 
-Route::post  ('/email/update', function (Request $request) {
+Route::post ('/email/update', function (Request $request) {
     $request->validate([
         'email' => 'required|email|unique:users,email',
     ]);
@@ -115,36 +89,22 @@ Route::post  ('/email/update', function (Request $request) {
     return back()->with('status', 'verification-link-sent');
 })->middleware(['auth'])->name('email.update');
 
-/*
-|--------------------------------------------------------------------------
-| BIDDER AREA
-|--------------------------------------------------------------------------
-*/
+//BIDDER AREA
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
-
-    Route::post ('/lots/{lot}/bid',  [HomeController::class, 'bid'])->middleware(['auth', 'throttle.bid'])->name('lots.bid');
+    Route::post ('/lots/{lot}/bid',  [HomeController::class, 'bid'])->name('lots.bid')->middleware('throttle.bid');
 
     // LELANG SAYA
     Route::get ('/my/auctions',      [MyAuctionController::class, 'index'])->name('my.auctions');
     Route::get ('/my-auctions/poll', [MyAuctionController::class, 'poll'])->name('bids.poll');
-    Route::post('/watchlist/{lot}',  [MyAuctionController::class, 'toggle'])->name('watchlist.toggle');
+    Route::post('/watchlist/{lot}',  [MyAuctionController::class, 'toggle'])->name('watchlist.toggle')->middleware('can-bid');
 
     // TRANSAKSI SAYA
     Route::get ('/my/transactions',           [TransactionController::class, 'index'])->name('transactions.index');
     Route::get ('/my/transactions/{payment}', [TransactionController::class, 'show'])->name('transactions.show');
 });
 
-/*
-|--------------------------------------------------------------------------
-| PAYMENT GATEWAY - DUITKU
-|--------------------------------------------------------------------------
-*/
-
+//Payment Gateway - Duitku (auth + verified)
 Route::middleware(['auth', 'verified'])
     ->prefix('checkout')
     ->group(function () {
@@ -152,12 +112,7 @@ Route::middleware(['auth', 'verified'])
         Route::get ('{payment}/return', [PaymentCheckoutController::class, 'return'])->name('checkout.return'); // return URL setelah bayar 
     });
 
-/*
-|--------------------------------------------------------------------------
-| RAJA ONGKIR
-|--------------------------------------------------------------------------
-*/
-
+//RajaOngkir (auth + verified)
 Route::middleware  (['auth', 'verified'])->group(function () {
     Route::prefix  ('ajax/rajaongkir')->name('rajaongkir.')->group(function () {
         Route::get ('provinces', [ShippingController::class, 'provinces'])->name('provinces');
@@ -171,15 +126,10 @@ Route::middleware  (['auth', 'verified'])->group(function () {
     Route::post ('/my/transactions/{payment}/shipping/complete', [ShippingController::class, 'complete'])->name('shipping.complete');
 });
 
-/*
-|--------------------------------------------------------------------------
-| ADMIN AREA
-|--------------------------------------------------------------------------
-*/
-
+//ADMIN AREA
 Route::prefix('admin')->middleware(['auth', 'verified', 'admin'])  ->group(function () {
     // DASHBOARD
-    Route::get   ('/dashboard', function () {return view('admin.dashboard'); })->name('admin.dashboard');
+    Route::get   ('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 
     // PRODUK
     Route::get   ('/products',                       [ProductController::class, 'index'])->name('products.index');

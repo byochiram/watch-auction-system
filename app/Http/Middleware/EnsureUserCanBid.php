@@ -24,28 +24,30 @@ class EnsureUserCanBid
 
         // 2. Harus BIDDER
         if (! $user->isBidder()) {
-            return redirect()
-                ->route('home')
-                ->with('error', 'Hanya akun bidder yang dapat melakukan bid.');
+            $msg = 'Hanya akun bidder yang dapat menggunakan fitur ini.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['message' => $msg], 403);
+            }
+            return redirect()->route('home')->with('error', $msg);
         }
 
         // 3. Tidak boleh SUSPENDED
         if ($user->isSuspended()) {
-            $msg = 'Akun Anda sedang ditangguhkan. Anda tidak dapat melakukan bid.';
-
-            if ($request->wantsJson() || $request->expectsJson()) {
-                return response()->json([
-                    'message' => $msg,
-                ], 403);
+            $msg = 'Akun Anda sedang ditangguhkan. Anda tidak dapat menggunakan fitur ini.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['message' => $msg], 403);
             }
-
-            return redirect()
-                ->route('home')
-                ->with('error', $msg);
+            return redirect()->route('home')->with('error', $msg);
         }
 
         // 4. Email wajib terverifikasi
         if (! $user->hasVerifiedEmail()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Email belum terverifikasi.',
+                    'redirect' => route('verification.notice'),
+                ], 403);
+            }
             return redirect()->route('verification.notice');
         }
         

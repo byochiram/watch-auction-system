@@ -37,45 +37,135 @@
             </a>
 
             {{-- Tombol Watchlist di ujung kanan (AJAX) --}}
-            @auth
-                <button type="button"
-                        data-watchlist-button
-                        data-url="{{ route('watchlist.toggle', $lot) }}"
-                        data-watchlisted="{{ $isWatchlisted ? '1' : '0' }}"
-                        class="inline-flex items-center gap-1.5
-                            rounded-full px-3 py-1.5
-                            text-xs font-semibold border transition
-                            {{ $isWatchlisted
-                                    ? 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100'
-                                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}">
-                    
+            @guest
+                {{-- Belum login -> arahkan ke login --}}
+                <a href="{{ route('login') }}"
+                    class="inline-flex items-center gap-1.5
+                        rounded-full px-3 py-1.5
+                        text-xs font-semibold border transition
+                        bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                    title="Login untuk menambahkan ke watchlist">
+
                     <span data-heart-pill
                         class="inline-flex h-5 w-5 items-center justify-center rounded-full
-                                {{ $isWatchlisted
-                                        ? 'bg-rose-500 text-white'
-                                        : 'bg-white text-slate-500 border border-slate-200' }}">
+                                bg-white text-slate-500 border border-slate-200">
                         {{-- Heart outline --}}
                         <svg xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 16 16"
-                            class="w-3 h-3 icon-heart-outline {{ $isWatchlisted ? 'hidden' : '' }}">
+                            class="w-3 h-3">
                             <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"
                                 fill="currentColor"/>
                         </svg>
-
-                        {{-- Heart fill --}}
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 16 16"
-                            class="w-3 h-3 icon-heart-fill {{ $isWatchlisted ? '' : 'hidden' }}">
-                            <path fill-rule="evenodd"
-                                d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"
-                                fill="currentColor"/>
-                        </svg>
                     </span>
 
-                    <span data-watchlist-label>
-                        {{ $isWatchlisted ? 'Di watchlist' : 'Tambah ke watchlist' }}
-                    </span>
-                </button>
+                    <span>Tambah ke watchlist</span>
+                </a>
+            @endguest
+
+            @auth
+                @php
+                    $u = auth()->user();
+
+                    $isBidder    = method_exists($u, 'isBidder') ? $u->isBidder() : ($u->role ?? null) === 'BIDDER';
+                    $isAdmin     = ! $isBidder; // asumsi semua non-bidder = admin/superadmin
+                    $isSuspended = method_exists($u,'isSuspended') && $u->isSuspended();
+                    $isVerified  = method_exists($u,'hasVerifiedEmail') ? $u->hasVerifiedEmail() : !is_null($u->email_verified_at);
+
+                    $isWatchlisted = $isWatchlisted ?? false;
+
+                    $canWatchlist = $isBidder && $isVerified && ! $isSuspended;
+                @endphp
+
+                @if($canWatchlist)
+                    {{-- Bidder + verified + not suspended -> AJAX toggle --}}
+                    <button type="button"
+                            data-watchlist-button
+                            data-url="{{ route('watchlist.toggle', $lot) }}"
+                            data-watchlisted="{{ $isWatchlisted ? '1' : '0' }}"
+                            class="inline-flex items-center gap-1.5
+                                rounded-full px-3 py-1.5
+                                text-xs font-semibold border transition
+                                {{ $isWatchlisted
+                                        ? 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100'
+                                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}">
+
+                        <span data-heart-pill
+                            class="inline-flex h-5 w-5 items-center justify-center rounded-full
+                                    {{ $isWatchlisted
+                                            ? 'bg-rose-500 text-white'
+                                            : 'bg-white text-slate-500 border border-slate-200' }}">
+                            {{-- Heart outline --}}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 16 16"
+                                class="w-3 h-3 icon-heart-outline {{ $isWatchlisted ? 'hidden' : '' }}">
+                                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"
+                                    fill="currentColor"/>
+                            </svg>
+
+                            {{-- Heart fill --}}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 16 16"
+                                class="w-3 h-3 icon-heart-fill {{ $isWatchlisted ? '' : 'hidden' }}">
+                                <path fill-rule="evenodd"
+                                    d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"
+                                    fill="currentColor"/>
+                            </svg>
+                        </span>
+
+                        <span data-watchlist-label>
+                            {{ $isWatchlisted ? 'Di watchlist' : 'Tambah ke watchlist' }}
+                        </span>
+                    </button>
+
+                @elseif($isBidder && ! $isVerified)
+                    {{-- Bidder tapi belum verifikasi -> arahkan ke halaman verifikasi --}}
+                    <a href="{{ route('verification.notice') }}"
+                        class="inline-flex items-center gap-1.5
+                            rounded-full px-3 py-1.5
+                            text-xs font-semibold border transition
+                            bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                        title="Verifikasi email dulu untuk menggunakan watchlist">
+
+                        <span data-heart-pill
+                            class="inline-flex h-5 w-5 items-center justify-center rounded-full
+                                    bg-white text-slate-500 border border-slate-200">
+                            {{-- Heart outline --}}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 16 16"
+                                class="w-3 h-3">
+                                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"
+                                    fill="currentColor"/>
+                            </svg>
+                        </span>
+
+                        <span>Tambah ke watchlist</span>
+                    </a>
+
+                @else
+                    {{-- Suspended atau Admin -> disabled --}}
+                    <button type="button"
+                        disabled
+                        class="inline-flex items-center gap-1.5
+                            rounded-full px-3 py-1.5
+                            text-xs font-semibold border transition
+                            bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed"
+                        title="{{ $isSuspended ? 'Akun sedang ditangguhkan' : 'Admin tidak dapat menggunakan watchlist' }}">
+
+                        <span data-heart-pill
+                            class="inline-flex h-5 w-5 items-center justify-center rounded-full
+                                    bg-white text-slate-400 border border-slate-200">
+                            {{-- Heart outline --}}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 16 16"
+                                class="w-3 h-3">
+                                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"
+                                    fill="currentColor"/>
+                            </svg>
+                        </span>
+
+                        <span>Tambah ke watchlist</span>
+                    </button>
+                @endif
             @endauth
         </div>
 
@@ -386,6 +476,23 @@
                                 </div>
                             </div>
                         @endif
+                        @if($lot->runtime_status === 'CANCELLED' && $lot->cancel_reason)
+                            <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                                <p class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1">
+                                    Alasan Pembatalan
+                                </p>
+
+                                <p class="text-sm text-slate-700 leading-relaxed">
+                                    {{ $lot->cancel_reason }}
+                                </p>
+
+                                <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+                                    Kami mohon maaf atas ketidaknyamanan yang ditimbulkan.
+                                    Seluruh bid yang telah masuk dibatalkan dan tidak diproses lebih lanjut.
+                                    Silakan hubungi admin apabila Anda memerlukan bantuan.
+                                </p>
+                            </div>
+                        @endif
                     </div>
 
                     <dl class="grid grid-cols-2 gap-y-2 text-sm mb-3">
@@ -433,8 +540,7 @@
                             $statusMessage = 'Lelang belum dimulai. Anda dapat memasukkan nominal nanti saat lelang sudah Live.';
                             $statusColor   = 'text-amber-700';
                         } elseif ($isCancelled) {
-                            $statusMessage = 'Lelang ini telah dibatalkan oleh penyelenggara. Bid tidak dapat dilakukan.';
-                            $statusColor   = 'text-slate-700'; 
+                            $statusMessage = null;
                         } elseif ($isEnded) {
                             $statusMessage = 'Lelang ini telah berakhir. Anda tidak dapat lagi melakukan bid.';
                             $statusColor   = 'text-red-700';
@@ -604,22 +710,13 @@
 
                                             <a href="{{ route('transactions.index') }}"
                                             class="underline font-semibold leading-snug block">
-                                                Selesaikan pembayaran segera.
+                                                 Selesaikan pembayaran segera.
                                             </a>
                                         @else
                                             <span class="leading-snug block">
                                                 Lelang ini telah berakhir dan Anda tidak memenangkan lot ini.
                                             </span>
                                         @endif
-                                    </div>
-                                @elseif($isCancelled)
-                                    <div id="my-bid-status-pill"
-                                        class="inline-flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-1
-                                            rounded-full sm:rounded-xl px-3 py-2
-                                            text-[12px] font-medium bg-slate-100 text-slate-700">
-                                        <span class="leading-snug block">
-                                            Lelang ini telah dibatalkan oleh penyelenggara. Semua bid yang sudah masuk tidak diproses lebih lanjut. Hubungi admin untuk info lebih lanjut.
-                                        </span>
                                     </div>
                                 @endif
                             @endif
@@ -909,8 +1006,8 @@
                         msgEl.textContent = 'Lelang belum dimulai. Anda dapat memasukkan nominal nanti saat lelang sudah Live.';
                         msgEl.classList.add('text-amber-700');
                     } else if (isCancelled) {
-                        msgEl.textContent = 'Lelang ini telah dibatalkan oleh penyelenggara. Bid tidak dapat dilakukan.';
-                        msgEl.classList.add('text-slate-700');
+                        msgEl.textContent = '';
+                        msgEl.classList.add('hidden');
                     } else if (isEnded) {
                         msgEl.textContent = 'Lelang ini telah berakhir. Anda tidak dapat lagi melakukan bid.';
                         msgEl.classList.add('text-red-700');
@@ -944,25 +1041,11 @@
                 const myBidWrapper = document.getElementById('my-bid-status-wrapper');
 
                 if (isCancelled && myBidState && myBidWrapper) {
-                    const hasBid = myBidState.dataset.hasBid === '1';
+                    // Untuk status CANCELLED:
+                    // pesan sudah ditampilkan di blok "Alasan Pembatalan"
+                    // jadi jangan tampilkan status pribadi tambahan
                     const existing = document.getElementById('my-bid-status-pill');
-
-                    if (!hasBid) {
-                        if (existing) existing.remove();
-                        return;
-                    }
-
-                    let pill = existing;
-                    if (!pill) {
-                        pill = document.createElement('div');
-                        pill.id = 'my-bid-status-pill';
-                        pill.className = 'inline-flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-1 rounded-full sm:rounded-xl px-3 py-2 text-[12px] font-medium';
-                        myBidWrapper.appendChild(pill);
-                    }
-
-                    pill.classList.remove('bg-emerald-50','text-emerald-800','bg-amber-50','text-amber-800');
-                    pill.classList.add('bg-slate-100','text-slate-700');
-                    pill.textContent = 'Lelang ini telah dibatalkan oleh penyelenggara. Semua bid yang sudah masuk dibatalkan dan tidak diproses lebih lanjut. Silakan hubungi admin jika Anda memerlukan bantuan.';
+                    if (existing) existing.remove();
                     return;
                 }
 

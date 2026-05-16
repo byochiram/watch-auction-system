@@ -1,11 +1,17 @@
 {{-- admin/users/index.blade.php --}}
+@php
+    $resetModalUser = session('reset_user_id') ? \App\Models\User::find(session('reset_user_id')) : null;
+@endphp
 <x-app-layout title="Pengguna">
     <div class="py-6"
         x-data="userPage(
             '{{ route('users.index') }}',
             '{{ $currentRole ?: 'BIDDER' }}',
             '{{ url('/admin/users') }}',
-            {{ session('modal') === 'create-admin' && $errors->any() ? 'true' : 'false' }}
+            {{ session('modal') === 'create-admin' && $errors->any() ? 'true' : 'false' }},
+            {{ session('modal') === 'reset-admin' && $errors->any() ? 'true' : 'false' }},
+            @js($resetModalUser ? ['id'=>$resetModalUser->id, 'name'=>$resetModalUser->name, 'email'=>$resetModalUser->email] : null),
+            @js($resetModalUser ? url('/admin/users/'.$resetModalUser->id.'/reset') : '')
         )"
         x-init="init()">
 
@@ -448,14 +454,22 @@
                             <label class="block text-sm font-medium text-slate-700 mb-1">
                                 Password Baru <span class="text-red-500">*</span>
                             </label>
-                            <input type="password" name="password" class="w-full rounded-md border-gray-300" required>
+                            <input id="reset_password" type="password" name="password"
+                                    class="w-full rounded-md border-gray-300" required>
+                            @error('password') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            <p id="reset_password_error" class="mt-1 text-xs"></p>
                         </div>
+
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">
                                 Konfirmasi Password Baru <span class="text-red-500">*</span>
                             </label>
-                            <input type="password" name="password_confirmation" class="w-full rounded-md border-gray-300" required>
+                            <input id="reset_password_confirmation" type="password" name="password_confirmation"
+                                    class="w-full rounded-md border-gray-300" required>
+                            @error('password_confirmation') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            <p id="reset_password_confirm_error" class="mt-1 text-xs"></p>
                         </div>
+
                         <div class="pt-2 border-t">
                             <label class="block text-sm font-medium text-slate-700 mb-1">
                                 Password Anda (Superadmin) <span class="text-red-500">*</span>
@@ -463,7 +477,9 @@
                             <p class="text-[13px] text-slate-500 mb-1">
                                 Untuk keamanan, masukkan password akun Anda sebagai konfirmasi.
                             </p>
-                            <input type="password" name="admin_password" class="w-full rounded-md border-gray-300" required>
+                            <input type="password" name="admin_password"
+                                    class="w-full rounded-md border-gray-300" required>
+                            @error('admin_password') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                         </div>
                     </div>
 
@@ -533,7 +549,9 @@
     </div>
 
     <script>
-        function userPage(baseUrl, initialRole = 'BIDDER', baseResetUrl, initialCreateOpen = false) {
+        function userPage(baseUrl, initialRole = 'BIDDER', baseResetUrl, initialCreateOpen = false,
+                  initialResetOpen=false, initialResetUser=null, initialResetAction='') 
+        {
             return {
                 baseUrl,
                 baseResetUrl,
@@ -556,6 +574,11 @@
 
                 init() {
                     this._wirePagination();
+                    if (initialResetOpen && initialResetUser) {
+                        this.resetUser = initialResetUser;
+                        this.resetAction = initialResetAction;
+                        this.resetOpen = true;
+                    }
                 },
 
                 changeTab(newRole) {
@@ -722,6 +745,64 @@
                     }
                 });
             }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const pass = document.getElementById('reset_password');
+        const conf = document.getElementById('reset_password_confirmation');
+        const passError = document.getElementById('reset_password_error');
+        const confError = document.getElementById('reset_password_confirm_error');
+
+        if (!pass || !conf) return;
+
+        function validatePass() {
+            const v = pass.value || '';
+            passError.textContent = '';
+            passError.className = 'mt-1 text-xs';
+
+            if (v === '') return;
+
+            if (v.length < 8) {
+            passError.textContent = 'Kata sandi minimal 8 karakter.';
+            passError.classList.add('text-red-600');
+            return;
+            }
+            if (!/[A-Za-z]/.test(v)) {
+            passError.textContent = 'Kata sandi harus mengandung setidaknya satu huruf.';
+            passError.classList.add('text-red-600');
+            return;
+            }
+            if (!/[0-9]/.test(v)) {
+            passError.textContent = 'Kata sandi harus mengandung setidaknya satu angka.';
+            passError.classList.add('text-red-600');
+            return;
+            }
+
+            passError.textContent = 'Kata sandi memenuhi kriteria ✓';
+            passError.classList.add('text-emerald-600');
+        }
+
+        function validateConf() {
+            const p = pass.value || '';
+            const c = conf.value || '';
+
+            confError.textContent = '';
+            confError.className = 'mt-1 text-xs';
+
+            if (c === '') return;
+
+            if (p !== c) {
+            confError.textContent = 'Konfirmasi password tidak sama.';
+            confError.classList.add('text-red-600');
+            } else {
+            confError.textContent = 'Konfirmasi cocok ✓';
+            confError.classList.add('text-emerald-600');
+            }
+        }
+
+        pass.addEventListener('input', () => { validatePass(); validateConf(); });
+        conf.addEventListener('input', validateConf);
         });
     </script>
 

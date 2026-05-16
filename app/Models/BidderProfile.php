@@ -3,10 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Laravolt\Indonesia\Models\Province;
-use Laravolt\Indonesia\Models\City;
-use Laravolt\Indonesia\Models\District;  
-use Laravolt\Indonesia\Models\Village;
 
 class BidderProfile extends Model
 {
@@ -82,25 +78,4 @@ class BidderProfile extends Model
     {
         return $this->hasMany(Payment::class);
     }
-
-    // public function getProvinceNameAttribute(): ?string
-    // {
-    //     return $this->provinceRef->name ?? null;
-    // }
-
-    // public function getCityNameAttribute(): ?string
-    // {
-    //     return $this->cityRef->name ?? null;
-    // }
-
-    // public function getDistrictNameAttribute(): ?string
-    // {
-    //     return $this->districtRef->name ?? null;
-    // }
-
-    // public function getVillageNameAttribute(): ?string
-    // {
-    //     return $this->villageRef->name ?? null;
-    // }
-
 }

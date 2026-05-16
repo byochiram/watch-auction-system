@@ -4,7 +4,7 @@
         {{-- BREADCRUMB / HEADER --}}
         <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-                <p class="text-xs uppercase tracking-[0.18em] text-slate-400 mb-1">
+                <p class="text-sm uppercase tracking-[0.18em] text-slate-400 mb-1">
                     Panduan Pengguna
                 </p>
                 <h1 class="text-2xl md:text-3xl font-bold text-slate-900">
@@ -16,7 +16,7 @@
                 </p>
             </div>
 
-            <div class="flex items-center gap-2 text-xs text-slate-500">
+            <div class="flex items-center gap-2 text-sm text-slate-500">
                 <a href="{{ route('home') }}" class="hover:text-slate-900">Beranda</a>
                 <span>/</span>
                 <span class="font-medium text-slate-900">Panduan & Aturan</span>
@@ -45,6 +45,11 @@
                       bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 transition">
                 💳 Pembayaran & Penyelesaian
             </a>
+            <a href="#komplain"
+                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium 
+                    bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 transition">
+                🔁 Komplain & Pengembalian Dana
+            </a>
             <a href="#faq"
                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium 
                       bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 transition">
@@ -72,13 +77,13 @@
                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Langkah 3</p>
                 <h2 class="text-sm font-semibold text-slate-900 mb-1">Menang & selesaikan pembayaran</h2>
                 <p class="text-xs text-slate-600">
-                    Jika Anda pemenang, ikuti instruksi pembayaran dan konfirmasi dalam batas waktu yang ditentukan.
+                    Jika Anda pemenang, lakukan pembayaran sesuai instruksi pada invoice dalam batas waktu yang ditentukan.
                 </p>
             </div>
         </section>
 
         {{-- CARA MENGIKUTI LELANG --}}
-        <section id="cara-ikut" class="space-y-4">
+        <section id="cara-ikut" class="space-y-4 scroll-mt-24">
             <div class="flex items-center justify-between gap-3">
                 <h2 class="text-lg md:text-xl font-semibold text-slate-900">
                     Cara Mengikuti Lelang
@@ -109,9 +114,9 @@
                             2
                         </div>
                         <div>
-                            <h3 class="text-sm font-semibold text-slate-900">Lengkapi profil bidder</h3>
+                            <h3 class="text-sm font-semibold text-slate-900">Pastikan data akun sudah benar</h3>
                             <p class="text-xs text-slate-600 mt-1">
-                                Lengkapi data diri dan kontak yang valid. Data ini digunakan untuk konfirmasi jika Anda memenangkan lelang.
+                                Data diri dan kontak diisi saat pendaftaran dan digunakan untuk konfirmasi jika Anda memenangkan lelang. Pastikan email dan nomor HP aktif.
                             </p>
                         </div>
                     </li>
@@ -166,14 +171,14 @@
                         <li>Tentukan batas harga maksimum yang nyaman untuk Anda sebelum lelang dimulai.</li>
                         <li>Periksa kembali jadwal mulai dan berakhirnya lelang agar tidak terlewat.</li>
                         <li>Pastikan koneksi internet stabil saat melakukan bid mendekati akhir waktu.</li>
-                        <li>Simak deskripsi kondisi jam secara detail, termasuk kemungkinan adanya pemakaian sebelumnya.</li>
+                        <li>Simak deskripsi kondisi jam secara detail, termasuk catatan pemakaian dan kelengkapan.</li>
                     </ul>
                 </div>
             </div>
         </section>
 
         {{-- ATURAN UTAMA --}}
-        <section id="aturan-utama" class="space-y-4">
+        <section id="aturan-utama" class="space-y-4 scroll-mt-24">
             <h2 class="text-lg md:text-xl font-semibold text-slate-900">
                 Aturan Utama Lelang
             </h2>
@@ -219,7 +224,7 @@
         </section>
 
         {{-- STATUS & WAKTU LELANG --}}
-        <section id="status-lelang" class="space-y-4">
+        <section id="status-lelang" class="space-y-4 scroll-mt-24">
             <h2 class="text-lg md:text-xl font-semibold text-slate-900">
                 Status Lelang & Countdown Waktu
             </h2>
@@ -256,7 +261,7 @@
         </section>
 
         {{-- PEMBAYARAN & PENYELESAIAN --}}
-        <section id="pembayaran" class="space-y-4">
+        <section id="pembayaran" class="space-y-4 scroll-mt-24">
             <h2 class="text-lg md:text-xl font-semibold text-slate-900">
                 Pembayaran & Penyelesaian Lelang
             </h2>
@@ -266,16 +271,16 @@
                     <h3 class="text-sm font-semibold text-slate-900">Jika Anda Menang Lelang</h3>
                     <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside">
                         <li>
-                            Anda akan menerima notifikasi melalui email / dashboard jika ditetapkan sebagai pemenang.
+                            Anda akan menerima notifikasi melalui email jika ditetapkan sebagai pemenang.
                         </li>
                         <li>
-                            Pembayaran wajib diselesaikan dalam jangka waktu yang ditentukan di invoice / notifikasi.
+                            Pembayaran wajib diselesaikan dalam jangka waktu yang ditentukan di invoice atau notifikasi.
                         </li>
                         <li>
-                            Detail nomor rekening / metode pembayaran resmi hanya tercantum pada halaman resmi kami.
+                            Detail nomor rekening dan metode pembayaran resmi hanya tercantum pada halaman resmi kami.
                         </li>
                         <li>
-                            Setelah pembayaran terkonfirmasi, proses pengiriman dan serah terima akan dijadwalkan oleh tim kami.
+                            Setelah pembayaran terkonfirmasi, tim kami akan memproses pengiriman dan mengirimkan nomor resi.
                         </li>
                     </ul>
                 </div>
@@ -284,7 +289,7 @@
                     <h3 class="text-sm font-semibold text-slate-900">Keterlambatan & Pembatalan</h3>
                     <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside">
                         <li>
-                            Jika pembayaran tidak dilakukan dalam batas waktu, kami berhak membatalkan kemenangan Anda.
+                            Jika pembayaran tidak dilakukan dalam batas waktu, kami akan menangguhkan sementara akun Anda.
                         </li>
                         <li>
                             Akun yang berulang kali menang namun tidak menyelesaikan pembayaran dapat diblokir permanen.
@@ -298,8 +303,43 @@
             </div>
         </section>
 
+        {{-- KOMPLAIN & PENGEMBALIAN DANA --}}
+        <section id="komplain" class="space-y-4 scroll-mt-24">
+            <h2 class="text-lg md:text-xl font-semibold text-slate-900">
+                Komplain & Pengembalian Dana
+            </h2>
+
+            <div class="grid gap-4 lg:grid-cols-2">
+                {{-- KEBIJAKAN --}}
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 space-y-2">
+                    <h3 class="text-sm font-semibold text-slate-900">Kebijakan</h3>
+                    <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside">
+                        <li>Pada prinsipnya, transaksi lelang bersifat final dan tidak menerima retur atau tukar.</li>
+                        <li>Komplain dapat diajukan jika ada ketidaksesuaian signifikan pada deskripsi lot atau terjadi kesalahan pengiriman.</li>
+                        <li>Komplain wajib disertai bukti (foto/video unboxing) dan diajukan segera setelah barang diterima.</li>
+                        <li>Pengembalian dana atau solusi lain dipertimbangkan setelah verifikasi tim kami melalui kanal resmi.</li>
+                    </ul>
+                </div>
+
+                {{-- PROSEDUR KOMPLAIN --}}
+                <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 space-y-2">
+                    <h3 class="text-sm font-semibold text-slate-900">Prosedur Komplain</h3>
+                    <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside">
+                        <li>Hubungi tim kami melalui kanal resmi yang tercantum di halaman <a href="{{ route('about') }}" class="underline text-slate-900 font-medium">Tentang Kami</a>.</li>
+                        <li>Sertakan nomor invoice, nama lot, dan bukti pendukung (foto/video pembukaan paket).</li>
+                        <li>Mohon tidak melakukan perbaikan atau modifikasi pada jam sebelum ada arahan dari tim kami.</li>
+                        <li>Tim kami akan melakukan verifikasi dan menginformasikan tindak lanjutnya.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500">
+                Catatan: Untuk keterlambatan atau kerusakan akibat pengiriman oleh pihak kurir berada di luar tanggung jawab kami dan penanganan akan mengikuti kebijakan jasa pengiriman terkait.
+            </p>
+        </section>
+
         {{-- FAQ --}}
-        <section id="faq" class="space-y-4" x-data="{ open: 'q1' }">
+        <section id="faq" class="space-y-4 scroll-mt-24" x-data="{ open: 'q1' }">
             <h2 class="text-lg md:text-xl font-semibold text-slate-900">
                 Pertanyaan yang Sering Diajukan (FAQ)
             </h2>

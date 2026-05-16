@@ -54,11 +54,10 @@ class ProductController extends Controller
         $totalProducts = Product::count();
         $categories = [
             'Dress Watch',
-            'Diver',
-            'Chronograph',
-            'Pilot',
-            'Field',
-            'Digital',
+            'Diver Watch',
+            'Chronograph Watch',
+            'Pilot Watch',
+            'Field Watch',
         ];
 
         return view('admin.products.index', compact(

@@ -87,19 +87,19 @@
         </div>
 
         @php
+            $hasErrors = $errors->any();
             $flash = [
                 'success' => session('success'),
                 'error'   => session('error'),
                 'status'  => session('status'),
             ];
         @endphp
-        @if($flash['success'] || $flash['error'] || $flash['status'])
+        @if(!$hasErrors && ($flash['success'] || $flash['error'] || $flash['status']))
             <script>
-                // kirim ke global var, nanti diproses di app.js
                 window._flash = {
-                    success: @json($flash['success']),
-                    error:   @json($flash['error']),
-                    status:  @json($flash['status']),
+                success: @json($flash['success']),
+                error:   @json($flash['error']),
+                status:  @json($flash['status']),
                 };
             </script>
         @endif

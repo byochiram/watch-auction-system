@@ -1,3 +1,4 @@
+{{-- resources/views/auth/login.blade.php --}}
 <x-auth-layout>
     <div class="min-h-screen w-full grid grid-cols-1 md:grid-cols-5">
 

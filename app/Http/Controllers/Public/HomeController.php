@@ -63,10 +63,22 @@ class HomeController extends Controller
         }
 
         // ====== FILTER: Harga Min–Maks (pakai COALESCE current_price / start_price) ======
+        if ($minPrice !== null && $minPrice !== '' && $maxPrice !== null && $maxPrice !== '' && (float)$minPrice > (float)$maxPrice) {
+            $msg = 'Rentang harga tidak valid. Nilai minimum tidak boleh lebih besar dari maksimum.';
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'error' => $msg,
+                ], 422);
+            }
+
+            return redirect()->route('home')->with('error', $msg);
+        }
+
+        // baru apply filter min/max
         if ($minPrice !== null && $minPrice !== '') {
             $query->whereRaw('COALESCE(current_price, start_price) >= ?', [$minPrice]);
         }
-
         if ($maxPrice !== null && $maxPrice !== '') {
             $query->whereRaw('COALESCE(current_price, start_price) <= ?', [$maxPrice]);
         }
@@ -377,30 +389,30 @@ class HomeController extends Controller
             ->with('success', 'Bid Anda berhasil direkam.');
     }
 
-    public function subscribeNewsletter(Request $request)
-    {
-        $data = $request->validate([
-            'newsletter_email' => ['required', 'email', 'max:191', 'unique:newsletter_subscriptions,email'],
-        ], [
-            'newsletter_email.required' => 'Email wajib diisi.',
-            'newsletter_email.email'    => 'Format email tidak valid.',
-            'newsletter_email.unique'   => 'Email ini sudah terdaftar.',
-        ]);
+    // public function subscribeNewsletter(Request $request)
+    // {
+    //     $data = $request->validate([
+    //         'newsletter_email' => ['required', 'email', 'max:191', 'unique:newsletter_subscriptions,email'],
+    //     ], [
+    //         'newsletter_email.required' => 'Email wajib diisi.',
+    //         'newsletter_email.email'    => 'Format email tidak valid.',
+    //         'newsletter_email.unique'   => 'Email ini sudah terdaftar.',
+    //     ]);
 
-        NewsletterSubscription::create([
-            'email' => $data['newsletter_email'],
-        ]);
+    //     NewsletterSubscription::create([
+    //         'email' => $data['newsletter_email'],
+    //     ]);
 
-        // kalau AJAX → balas JSON
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status'  => 'ok',
-                'message' => 'Terima kasih, email Anda sudah terdaftar.',
-            ]);
-        }
+    //     // kalau AJAX → balas JSON
+    //     if ($request->expectsJson()) {
+    //         return response()->json([
+    //             'status'  => 'ok',
+    //             'message' => 'Terima kasih, email Anda sudah terdaftar.',
+    //         ]);
+    //     }
 
-        return back()->with('subscribed', true);
-    }
+    //     return back()->with('subscribed', true);
+    // }
 
     public function poll(Request $request, AuctionLot $lot)
     {

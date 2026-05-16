@@ -275,7 +275,15 @@ class MyAuctionController extends Controller
         $user = $request->user();
 
         // pastikan punya bidder_profile
-        $profile = $user->bidderProfile ?: $user->bidderProfile()->create([]);
+        $profile = $user->bidderProfile;
+
+        if (! $profile) {
+            // fallback aman
+            $msg = 'Profil bidder belum tersedia.';
+            return $request->expectsJson()
+                ? response()->json(['message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
 
         $existing = Watchlist::where('bidder_profile_id', $profile->id)
             ->where('lot_id', $lot->id)
@@ -296,8 +304,9 @@ class MyAuctionController extends Controller
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
-                'status' => 'ok',
-                'action' => $action,
+                'status'  => 'ok',
+                'action'  => $action,
+                'message' => $flash,
             ]);
         }
 

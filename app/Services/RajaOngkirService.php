@@ -14,13 +14,13 @@ class RajaOngkirService
     public function __construct()
     {
         $this->baseUrl = rtrim(config('rajaongkir.base_url'), '/');
-        $this->apiKey  = (string) config('rajaongkir.api_key');
+        $this->apiKey  = (string) config('rajaongkir.key');
     }
 
     protected function client()
     {
         return Http::withHeaders([
-                'Authorization' => 'Bearer '.$this->apiKey,
+                'Key'    => $this->apiKey,
                 'Accept'        => 'application/json',
             ])
             ->baseUrl($this->baseUrl);
@@ -45,10 +45,10 @@ class RajaOngkirService
         $ttl = now()->addSeconds(config('rajaongkir.cache_ttl.province', 60 * 60 * 24 * 7));
 
         return Cache::remember('rajaongkir:provinces', $ttl, function () {
-            $res = $this->client()->get('/province');
+            $res = $this->client()->get('/destination/province');
 
             Log::debug('RajaOngkir raw', [
-                'endpoint' => '/province',
+                'endpoint' => '/destination/province',
                 'status'   => $res->status(),
                 'body'     => $res->body(),
             ]);
@@ -77,9 +77,8 @@ class RajaOngkirService
         $key = "rajaongkir:cities:{$provinceId}";
 
         return Cache::remember($key, $ttl, function () use ($provinceId) {
-            $res = $this->client()->get('/city', [
-                'province_id' => $provinceId,
-            ]);
+            $endpoint = "/destination/city/{$provinceId}";
+            $res = $this->client()->get($endpoint);
 
             Log::debug('RajaOngkir raw', [
                 'endpoint'    => '/city',
@@ -112,9 +111,8 @@ class RajaOngkirService
         $key = "rajaongkir:districts:{$cityId}";
 
         return Cache::remember($key, $ttl, function () use ($cityId) {
-            $res = $this->client()->get('/district', [
-                'city_id' => $cityId,
-            ]);
+            $endpoint = "/destination/district/{$cityId}";
+            $res = $this->client()->get($endpoint);
 
             Log::debug('RajaOngkir raw', [
                 'endpoint' => '/district',
@@ -147,13 +145,24 @@ class RajaOngkirService
         $key = "rajaongkir:cost:{$originDistrictId}:{$destinationDistrictId}:{$weight}";
 
         return Cache::remember($key, $ttl, function () use ($originDistrictId, $destinationDistrictId, $weight) {
+            $courier = (string) config(
+                'rajaongkir.courier_codes',
+                'jne:jnt'
+            );
+
+            $price = (string) config('rajaongkir.price', 'lowest');
+
             $payload = [
-                'origin_district_id'      => $originDistrictId,
-                'destination_district_id' => $destinationDistrictId,
-                'weight'                  => $weight,
+                'origin'      => $originDistrictId,
+                'destination' => $destinationDistrictId,
+                'weight'      => $weight,
+                'courier'     => $courier,
+                'price'       => $price,
             ];
 
-            $res = $this->client()->post('/district/domestic-cost', $payload);
+            $res = $this->client()
+                ->asForm() 
+                ->post('/calculate/district/domestic-cost', $payload);
 
             Log::debug('RajaOngkir raw', [
                 'endpoint'    => '/district/domestic-cost',
@@ -162,6 +171,7 @@ class RajaOngkirService
                 'origin'      => $originDistrictId,
                 'destination' => $destinationDistrictId,
                 'weight'      => $weight,
+                'payload'     => $payload,
             ]);
 
             if (! $res->successful()) {

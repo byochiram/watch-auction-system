@@ -5,12 +5,36 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
 use App\Models\AuctionLot;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class LotUpdateRequest extends FormRequest
 {
     public function authorize(): bool 
     { 
         return true; 
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        $lot = $this->route('lot');
+
+        session()->flash('reopen_edit', [
+            'id'            => $lot->id,
+            'product_id'    => $lot->product_id,
+            'start_price'   => $lot->start_price,
+            'increment'     => $lot->increment,
+            'start_at'      => optional($lot->start_at)->format('Y-m-d\TH:i'),
+            // pakai input user kalau ada
+            'end_at'        => old('end_at') ?? optional($lot->end_at)->format('Y-m-d\TH:i'),
+            'runtime_status'=> $lot->runtime_status,
+        ]);
+
+        throw new HttpResponseException(
+            redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+        );
     }
 
     protected function prepareForValidation()
@@ -35,13 +59,23 @@ class LotUpdateRequest extends FormRequest
         if ($status === 'ACTIVE') {
             return [
                 'end_at' => [
-                    'required','date',
+                    'required', 'date',
                     function ($attr, $val, $fail) use ($lot) {
                         $newEnd = Carbon::parse($val);
 
-                        // dan wajib setelah sekarang
-                        if ($newEnd->lessThanOrEqualTo(now())) {
+                        // konsisten dengan datetime-local (menit)
+                        $nowMin = now()->startOfMinute();
+
+                        // 1) wajib setelah waktu mulai
+                        if ($newEnd->lessThanOrEqualTo($lot->start_at)) {
+                            $fail('Waktu selesai harus setelah waktu mulai.');
+                            return;
+                        }
+
+                        // 2) wajib setelah waktu saat ini
+                        if ($newEnd->lessThanOrEqualTo($nowMin)) {
                             $fail('Waktu selesai harus setelah waktu saat ini.');
+                            return;
                         }
                     },
                 ],
@@ -81,25 +115,4 @@ class LotUpdateRequest extends FormRequest
             ],
         ];
     }
-  // public function messages(): array
-  // {
-  //     return [
-  //         'product_id.required' => 'Silakan pilih produk.',
-  //         'product_id.exists'   => 'Produk yang dipilih tidak ditemukan.',
-  //         'title.required'      => 'Nama lelang wajib diisi.',
-  //         'title.max'           => 'Nama lelang maksimal 180 karakter.',
-  //         'start_price.required'=> 'Harga awal wajib diisi.',
-  //         'start_price.numeric' => 'Harga awal harus berupa angka.',
-  //         'start_price.min'     => 'Harga awal tidak boleh negatif.',
-  //         'increment.required'  => 'Increment wajib diisi.',
-  //         'increment.numeric'   => 'Increment harus berupa angka.',
-  //         'increment.min'       => 'Increment minimal 0.01.',
-  //         'start_at.required'   => 'Tanggal mulai wajib diisi.',
-  //         'start_at.date'       => 'Format tanggal mulai tidak valid.',
-  //         'start_at.after_or_equal' => 'Tanggal mulai tidak boleh sebelum hari ini.',
-  //         'end_at.required'     => 'Tanggal selesai wajib diisi.',
-  //         'end_at.date'         => 'Format tanggal selesai tidak valid.',
-  //         'end_at.after'        => 'Tanggal selesai harus setelah tanggal mulai.',
-  //     ];
-  // }
 }

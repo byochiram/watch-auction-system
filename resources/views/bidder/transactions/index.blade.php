@@ -52,13 +52,30 @@
             @if($payments->isNotEmpty())
                 <div class="px-4 sm:px-6 pb-3 pt-3 text-[11px] sm:text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded-2xl">
                     <p class="font-semibold text-slate-700 mb-1.5">
-                        Keterangan status:
+                        Keterangan status transaksi:
                     </p>
                     <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
                         <li><span class="font-semibold text-amber-800">PENDING</span> — invoice sudah dibuat dan menunggu pembayaran maksimal 1×24 jam.</li>
                         <li><span class="font-semibold text-emerald-700">PAID</span> — pembayaran sudah diterima, transaksi selesai dan barang siap diproses.</li>
                         <li><span class="font-semibold text-red-700">EXPIRED</span> — batas waktu 1×24 jam terlewati tanpa pembayaran. Barang dinyatakan <span class="font-semibold">unsold</span> dan akun ditangguhkan selama 7 hari.</li>
                         <li><span class="font-semibold text-slate-700">CANCELLED</span> — transaksi dibatalkan oleh sistem / admin.</li>
+                    </ul>
+                    <p class="font-semibold text-slate-700 mt-3.5 mb-1.5">
+                        Keterangan status pengiriman:
+                    </p>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+                        <li>
+                            <span class="font-semibold text-amber-700">SEDANG DIKEMAS</span>
+                            — pembayaran sudah diterima dan pesanan sedang disiapkan admin.
+                        </li>
+                        <li>
+                            <span class="font-semibold text-blue-700">SEDANG DIKIRIM</span>
+                            — admin sudah menginput nomor resi dan pesanan dalam proses pengiriman.
+                        </li>
+                        <li>
+                            <span class="font-semibold text-emerald-700">SELESAI</span>
+                            — pesanan sudah diterima dan dikonfirmasi melalui tombol <span class="font-semibold">“Pesanan Selesai”</span>.
+                        </li>
                     </ul>
                 </div>
             @endif
@@ -91,6 +108,32 @@
                         $img     = optional($product?->images->first())->public_url ?? asset('tempus/placeholder.jpg');
 
                         $status  = $payment->status ?? 'PENDING';
+
+                        $shipCode = $payment->shipping_status;
+
+                        // fallback: kalau transaksi PAID tapi shipping_status kosong/PENDING → anggap PACKING
+                            if (($shipCode === null || $shipCode === 'PENDING') && $status === 'PAID') {
+                            $shipCode = 'PACKING';
+                        }
+
+                        // optional fallback: kalau ada resi & belum COMPLETED → anggap SHIPPED
+                            if (!$shipCode && $payment->shipping_tracking_no) {
+                            $shipCode = 'SHIPPED';
+                        }
+
+                        $shipLabel = match ($shipCode) {
+                            'PACKING'   => 'DIKEMAS',
+                            'SHIPPED'   => 'DIKIRIM',
+                            'COMPLETED' => 'SELESAI',
+                            default     => '-',
+                        };
+
+                        $shipClasses = match ($shipCode) {
+                            'PACKING'   => 'bg-amber-50 text-amber-700 ring-amber-100',
+                            'SHIPPED'   => 'bg-blue-50 text-blue-700 ring-blue-100',
+                            'COMPLETED' => 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+                            default     => 'bg-slate-50 text-slate-600 ring-slate-100',
+                        };
 
                         $statusClasses = match ($status) {
                             'PAID'      => 'bg-emerald-50 text-emerald-700 ring-emerald-100',
@@ -149,6 +192,16 @@
                                     </span>
                                 </div>
 
+                                {{-- Pengiriman --}}
+                                <div>
+                                    <div class="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-0.5">
+                                        Pengiriman
+                                    </div>
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 {{ $shipClasses }}">
+                                        {{ $shipLabel }}
+                                    </span>
+                                </div>
+
                                 {{-- Tanggal --}}
                                 <div>
                                     <div class="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-0.5">
@@ -166,15 +219,15 @@
                                 </div>
 
                                 {{-- Aksi --}}
-                                <div class="flex items-end justify-end">
+                                <div class="col-span-2 pt-1">
                                     @if($status === 'PENDING' && ! $isExpired)
                                         <a href="{{ route('transactions.show', $payment) }}"
-                                           class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800">
+                                        class="inline-flex w-full items-center justify-center rounded-full px-3 py-2 text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800">
                                             Bayar sekarang
                                         </a>
                                     @else
                                         <a href="{{ route('transactions.show', $payment) }}"
-                                           class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-slate-200 text-slate-800 hover:bg-slate-300">
+                                        class="inline-flex w-full items-center justify-center rounded-full px-3 py-2 text-xs font-semibold bg-slate-200 text-slate-800 hover:bg-slate-300">
                                             Detail
                                         </a>
                                     @endif
@@ -209,11 +262,17 @@
                                 </span>
                             </div>
 
-                            {{-- Status --}}
+                            {{-- Status (Transaksi + Pengiriman) --}}
                             <div class="col-span-2 text-sm text-center">
-                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 {{ $statusClasses }}">
-                                    {{ strtoupper($status) }}
-                                </span>
+                                <div class="inline-flex flex-col items-center gap-1">
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 {{ $statusClasses }}">
+                                        {{ strtoupper($status) }}
+                                    </span>
+
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 {{ $shipClasses }}">
+                                        {{ $shipLabel }}
+                                    </span>
+                                </div>
                             </div>
 
                             {{-- Jatuh tempo / Bayar --}}

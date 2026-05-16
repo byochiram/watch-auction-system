@@ -1,4 +1,5 @@
 import './bootstrap';
+import '../css/app.css';
 import 'flowbite';
 
 import collapse from '@alpinejs/collapse';
