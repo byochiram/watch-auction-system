@@ -14,7 +14,7 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email'=>'admin@lelangjam.local'],
+            ['email'=>'superadmin@tempusauctions.com'],
             [
                 'name'=>'Superadmin Lelang',
                 'username' => 'Superadmin',
