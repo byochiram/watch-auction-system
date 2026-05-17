@@ -34,6 +34,13 @@
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:site" content="@themesberg" />
   <meta name="twitter:creator" content="@themesberg" />
+
+  <link
+        rel="preload"
+        as="image"
+        href="{{ asset('tempus/hero2.webp') }}"
+        fetchpriority="high"
+    >
 </head>
 
 <body class="bg-white text-slate-800 antialiased overflow-x-hidden">

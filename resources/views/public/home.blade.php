@@ -5,14 +5,24 @@
         $user = Auth::user();
         $isSuspended = $user && $user->suspended_until && now()->lt($user->suspended_until);
     @endphp
-    <section class="relative {{ $isSuspended ? '-mt-20' : '-mt-28' }} left-1/2 right-1/2 -mx-[50vw] w-screen min-h-[68vh] md:min-h-[70vh] lg:min-h-[80vh] overflow-hidden text-white">
-        <!-- Background image full -->
-        <div class="absolute inset-0 -z-10 bg-center bg-no-repeat bg-cover" style="background-image:url('{{ asset('tempus/hero2.png') }}')"></div>
-        <!-- (opsional) overlay biar teks kontras -->
-        <div class="absolute inset-0 -z-10 bg-black/70"></div>
 
-        <!-- konten -->
-        <div class="relative mx-auto max-w-screen-xl px-6 md:pt-12 lg:pt-24 flex flex-col items-center justify-center text-center min-h-[70vh]">
+    <section class="relative isolate {{ $isSuspended ? '-mt-20' : '-mt-28' }} left-1/2 right-1/2 -mx-[50vw] w-screen min-h-[68vh] md:min-h-[70vh] lg:min-h-[80vh] overflow-hidden bg-slate-950 text-white">
+
+        {{-- Background image full --}}
+        <img
+            src="{{ asset('tempus/hero2.webp') }}"
+            alt="Tempus Auctions Hero"
+            class="absolute inset-0 z-0 h-full w-full object-cover object-center"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+        >
+
+        {{-- Overlay biar teks kontras --}}
+        <div class="absolute inset-0 z-10 bg-black/70"></div>
+
+        {{-- Konten --}}
+        <div class="relative z-20 mx-auto max-w-screen-xl px-6 md:pt-12 lg:pt-24 flex flex-col items-center justify-center text-center min-h-[70vh]">
             <h1 class="max-w-2xl mb-5 mt-5 text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight">
                 Timeless Pieces <br>Exclusive Bids
             </h1>
@@ -23,19 +33,12 @@
 
             <div class="flex flex-wrap gap-3 justify-center">
                 <a href="#auctions"
-                   class="inline-flex items-center rounded-xl bg-white/60 px-4 py-2 text-slate-900 font-semibold hover:bg-white">
+                class="inline-flex items-center rounded-xl bg-white/60 px-4 py-2 text-slate-900 font-semibold hover:bg-white">
                     Lihat Lelang
                 </a>
             </div>
         </div>
 
-        <!-- wave bawah -->
-        <!-- <div class="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1440 160" xmlns="http://www.w3.org/2000/svg" class="w-full" fill="none">
-                <path d="M0 80c120 40 240 60 360 60s240-20 360-60 240-60 360-60 240 20 360 60v80H0V80z"
-                      class="fill-white"/>
-            </svg>
-        </div> -->
     </section>
     {{-- ===================== END HERO ===================== --}}
 
