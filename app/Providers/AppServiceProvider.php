@@ -47,8 +47,9 @@ class AppServiceProvider extends ServiceProvider
             return $rule;
         });
 
-        if (config('app.env') !== 'local' || isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        if (app()->environment('production')) {
             URL::forceScheme('https');
+            URL::forceRootUrl(config('app.url'));
         }
     }
 }
