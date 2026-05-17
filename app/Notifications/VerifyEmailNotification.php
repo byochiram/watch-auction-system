@@ -11,19 +11,19 @@ use Illuminate\Support\Facades\URL;
 class VerifyEmailNotification extends BaseVerifyEmail
 {
     protected function verificationUrl($notifiable): string
-{
-    $path = URL::temporarySignedRoute(
-        'verification.verify',
-        Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
-        [
-            'id' => $notifiable->getKey(),
-            'hash' => sha1($notifiable->getEmailForVerification()),
-        ],
-        false
-    );
+    {
+        $path = URL::temporarySignedRoute(
+            'verification.verify',
+            Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
+            [
+                'id' => $notifiable->getKey(),
+                'hash' => sha1($notifiable->getEmailForVerification()),
+            ],
+            false
+        );
 
-    return rtrim(config('app.url'), '/') . $path;
-}
+        return rtrim(config('app.url'), '/') . $path;
+    }
     public function toMail($notifiable)
     {
         return (new MailMessage)
