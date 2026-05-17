@@ -1,6 +1,9 @@
 {{-- resources/public/partials/lot_cards.blade.php --}}
 @foreach($lots as $lot)
     @php
+        $isPriorityImage = $loop->index < 4;
+    @endphp
+    @php
         $product      = $lot->product;
         $images       = $product?->images ?? collect();
         $primaryImage = $images->first();
@@ -52,7 +55,7 @@
     @endphp
 
 
-    <div x-data="{ openQuick:false, active:0 }"
+    <div x-data="{ openQuick:false, active:0, modalLoaded:false }"
         data-lot-card="{{ $lot->id }}"
         class="auction-card group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition"
         data-title="{{ $title }}"
@@ -66,8 +69,13 @@
         <div class="relative">
             <img
                 src="{{ $primaryImage?->public_url ?? asset('tempus/placeholder.jpg') }}"
-                class="h-56 w-full object-cover"
+                class="h-56 w-full object-cover bg-slate-100"
                 alt="{{ $title }}"
+                width="640"
+                height="448"
+                loading="{{ $isPriorityImage ? 'eager' : 'lazy' }}"
+                decoding="async"
+                @if($isPriorityImage) fetchpriority="high" @endif
             >
 
             {{-- Badge status kiri --}}
@@ -80,7 +88,7 @@
                     class="absolute top-3 right-3 inline-flex items-center justify-center
                         rounded-full bg-white/90 text-slate-700 hover:bg-white
                         w-6 lg:w-8 h-6 lg:h-8 shadow-sm border border-slate-200"
-                    @click="openQuick = true">
+                    @click="openQuick = true; modalLoaded = true">
                 <svg class="w-4 lg:w-5 h-4 lg:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"
                         d="M2.25 12s2.7-6 9.75-6 9.75 6 9.75 6-2.7 6-9.75 6-9.75-6-9.75-6z" />
@@ -267,16 +275,17 @@
             x-cloak
             class="fixed inset-0 z-50 flex items-start sm:items-center justify-center 
                     bg-black/40 px-2 sm:px-3 pt-4 sm:pt-0 pb-4 sm:pb-0">
-            <div class="bg-white rounded-2xl shadow-2xl
-                    w-full                 {{-- mobile: penuh --}}
-                    sm:w-11/12            {{-- tablet / laptop kecil: 91% --}}
-                    lg:w-3/4              {{-- desktop: 75% --}}
-                    xl:w-1/2              {{-- desktop lebar: 50% --}}
-                    max-w-2xl             {{-- batas maksimal px --}}
-                    mx-auto max-h-[90vh]
-                    overflow-y-auto overflow-x-hidden"
-            @click.outside="openQuick = false">
 
+            <template x-if="modalLoaded">
+                <div class="bg-white rounded-2xl shadow-2xl
+                        w-full
+                        sm:w-11/12
+                        lg:w-3/4
+                        xl:w-1/2
+                        max-w-2xl
+                        mx-auto max-h-[90vh]
+                        overflow-y-auto overflow-x-hidden"
+                    @click.outside="openQuick = false">
 
                 {{-- HEADER --}}
                 <div class="flex items-start justify-between 
@@ -316,7 +325,9 @@
                                         x-cloak
                                         src="{{ $image->public_url ?? asset('tempus/placeholder.jpg') }}"
                                         alt="{{ $title }} - {{ $idx + 1 }}"
-                                        class="w-full h-auto object-contain lg:h-full lg:object-cover"
+                                        class="w-full h-auto object-contain lg:h-full lg:object-cover bg-slate-100"
+                                        loading="{{ $idx === 0 ? 'eager' : 'lazy' }}"
+                                        decoding="async"
                                     >
                                 @empty
                                     <img
@@ -344,7 +355,9 @@
                                             <img
                                                 src="{{ $image->public_url ?? asset('tempus/placeholder.jpg') }}"
                                                 alt="Thumb {{ $idx + 1 }}"
-                                                class="w-full h-full object-cover"
+                                                class="w-full h-full object-cover bg-slate-100"
+                                                loading="lazy"
+                                                decoding="async"
                                             >
                                         </button>
                                     @endforeach
