@@ -272,6 +272,85 @@
                     </div>
                 @endif
             </div>
+
+            <!-- {{-- CTA NEWSLETTER / NOTIFIKASI --}}
+            <div class="mt-16">
+                <div
+                    class="rounded-3xl border border-slate-200/80 bg-slate-50/80
+                        px-5 py-6 sm:px-8 sm:py-7
+                        flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+
+                    {{-- TEXT --}}
+                    <div class="flex items-start gap-3 max-w-xl">
+                        <div
+                            class="mt-1 flex h-9 w-9 items-center justify-center rounded-full
+                                bg-slate-900 text-white shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="1.7">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M4 6.5 11.2 11a1.5 1.5 0 0 0 1.6 0L20 6.5M5 19h14a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-1">
+                                Newsletter
+                            </p>
+                            <h2 class="text-lg sm:text-xl font-semibold text-slate-900">
+                                Ingin update saat ada lelang jam baru?
+                            </h2>
+                            <p class="mt-2 text-sm text-slate-600">
+                                Kami kirim ringkasan lelang, highlight lot menarik, dan info jadwal berikutnya.
+                                Frekuensi ringan, bisa berhenti kapan saja.
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- FORM --}}
+                    <div class="w-full md:w-auto">
+                        <form method="POST"
+                            action="{{ route('newsletter.subscribe') }}"
+                            id="newsletterForm"
+                            class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                            @csrf
+
+                            <input type="email"
+                                name="newsletter_email"
+                                required
+                                placeholder="Masukkan email Anda"
+                                class="flex-1 sm:flex-none
+                                        sm:w-72 md:w-80 lg:w-96
+                                        rounded-full border border-slate-300 bg-white px-4 py-2.5
+                                        text-sm text-slate-900 placeholder:text-slate-400
+                                        focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-500">
+
+                            <button type="submit"
+                                    class="inline-flex items-center justify-center rounded-full
+                                        bg-slate-900 text-white px-5 py-2.5 text-sm font-semibold
+                                        hover:bg-slate-800 transition">
+                                Ikuti Update
+                            </button>
+                        </form>
+
+                        {{-- container pesan sukses & error (bisa dipakai AJAX & non-AJAX) --}}
+                        <p id="newsletterSuccess" class="mt-2 text-xs text-emerald-700">
+                            @if(session('subscribed'))
+                                Terima kasih, email Anda sudah terdaftar.
+                            @endif
+                        </p>
+
+                        <p id="newsletterError" class="mt-2 text-xs text-red-600">
+                            @if($errors->has('newsletter_email'))
+                                {{ $errors->first('newsletter_email') }}
+                            @endif
+                        </p>
+
+                        <p class="mt-2 text-[11px] text-slate-500">
+                            Kami sertakan link untuk berhenti berlangganan di setiap email.
+                        </p>
+                    </div>
+
+                </div>
+            </div> -->
         </div>
     </section>
 
@@ -424,8 +503,6 @@
                 window.history.replaceState({}, '', newUrl);
 
                 try {
-                    grid.classList.add('opacity-50', 'pointer-events-none');
-                    
                     const res = await fetch(newUrl, {
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
