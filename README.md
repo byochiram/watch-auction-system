@@ -12,57 +12,18 @@ https://auctions.tempuscollective.com
 
 ## Main Features
 
-### Public / Guest
-
-- View auction catalog
-- Search, filter, and sort auction lots
-- View auction details
-- View guide and rules page
-- Register account
-- Login
-- Reset password
-
-### Bidder
-
-- Email verification
-- Manage profile
-- Add or remove auction lots from watchlist
-- Place bids on active auction lots
-- View real-time highest bid information
-- View auction countdown
-- View bidding history
-- View won or lost auction status
-- Checkout invoice after winning an auction
-- Manage shipping address
-- Calculate shipping cost
-- Complete payment through Duitku Sandbox
-- Confirm received shipment
-
-### Admin
-
-- Manage products and product images
-- Manage auction lots
-- Schedule, edit, cancel, and close auction lots
-- Monitor bids
-- Manage users
-- Suspend or activate users
-- Resend email verification
-- Manage invoices and transactions
-- Input or update shipment tracking number
-- Monitor payment and shipment status
-
-### Notifications
-
-- Email verification
-- Password reset
-- Auction won
-- Auction lost
-- Auction cancelled
-- Payment reminder
-- Payment paid
-- Account suspended
-- Shipment on the way
-- Shipment received
+- User authentication with email verification
+- Auction catalog with search, filter, and sorting
+- Auction detail page with countdown and real-time highest bid information
+- Bidding system with bid validation and increment rules
+- Watchlist for saved auction lots
+- Winner selection after auction ends
+- Invoice generation for auction winners
+- Duitku Sandbox payment integration
+- RajaOngkir shipping cost calculation
+- Email notifications for verification, auction result, payment, account status, and shipment updates
+- Admin dashboard for managing products, auction lots, bids, users, invoices, and shipments
+- Laravel Scheduler support for automatic auction closing
 
 ## Tech Stack
 
@@ -80,13 +41,13 @@ https://auctions.tempuscollective.com
 
 ## Screenshots
 
-Place screenshots inside:
+Place screenshots inside this folder:
 
 ```txt
 public/docs/screenshots
 ```
 
-Recommended screenshots:
+Recommended screenshot files:
 
 ```txt
 public/docs/screenshots/landing-page.png
@@ -94,7 +55,6 @@ public/docs/screenshots/auction-list.png
 public/docs/screenshots/auction-detail.png
 public/docs/screenshots/invoice-payment.png
 public/docs/screenshots/admin-dashboard.png
-public/docs/screenshots/admin-products.png
 ```
 
 ### Landing Page
@@ -116,10 +76,6 @@ public/docs/screenshots/admin-products.png
 ### Admin Dashboard
 
 ![Admin Dashboard](public/docs/screenshots/admin-dashboard.png)
-
-### Admin Product Management
-
-![Admin Product Management](public/docs/screenshots/admin-products.png)
 
 ## Demo Account
 
@@ -224,7 +180,7 @@ Run local development server:
 php artisan serve
 ```
 
-Open:
+Open the application:
 
 ```txt
 http://127.0.0.1:8000
@@ -346,12 +302,10 @@ Recommended Railway cron schedule:
 
 ## Security Notes
 
-- Production debug mode is disabled
-- Real credentials are stored in environment variables
-- API keys and production secrets are not committed to GitHub
-- Admin credentials are not publicly shared
-- Payment gateway runs in sandbox mode for demo
-- Signed verification links are protected
+- Real credentials and API keys are stored in environment variables.
+- Production secrets are not included in this repository.
+- Admin credentials are not publicly shared.
+- Duitku is configured in sandbox mode for demo and testing.
 
 ## Developer
 
