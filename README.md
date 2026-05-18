@@ -43,15 +43,15 @@ https://auctions.tempuscollective.com
 
 ### Landing Page
 
-![Landing Page](public/docs/screenshots/landing-page.png)
+<img src="public/docs/screenshots/landing-page.webp" alt="Landing Page" width="800">
 
 ### Auction List
 
-![Auction List](public/docs/screenshots/auction-list.png)
+<img src="public/docs/screenshots/auction-list.webp" alt="Auction List" width="800">
 
 ### Auction Detail
 
-![Auction Detail](public/docs/screenshots/auction-detail.png)
+<img src="public/docs/screenshots/auction-detail.webp" alt="Auction Detail" width="800">
 
 ## Demo Account
 
