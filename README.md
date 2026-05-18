@@ -1,59 +1,293 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Tempus Auctions
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Tempus Auctions is a Laravel-based watch auction platform built for Tempus Collective Indonesia.  
+The system supports user registration, email verification, product auctions, bidding flow, winner selection, invoice generation, payment gateway integration, and cloud deployment.
 
-## About Laravel
+## Live Demo
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+https://auctions.tempuscollective.com
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+> Payment is configured using Duitku Sandbox for demo purposes.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Features
 
-## Learning Laravel
+### User
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- Register and login
+- Email verification
+- Browse active watch auctions
+- View auction details
+- Place bids
+- Add auction items to watchlist
+- Receive auction winner notification
+- View invoice and payment information
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Admin
 
-## Laravel Sponsors
+- Manage products
+- Manage product images
+- Manage auction lots
+- Monitor bids
+- Monitor invoices and payments
+- Manage users
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### System
 
-### Premium Partners
+- Auction start and end time
+- Highest bid tracking
+- Winner selection
+- Invoice generation
+- Duitku Sandbox payment integration
+- Resend email integration
+- RajaOngkir shipping cost support
+- Railway deployment
+- Laravel Scheduler support for auction closing
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Tech Stack
 
-## Contributing
+| Category | Technology |
+|---|---|
+| Backend | Laravel |
+| Frontend | Blade, Tailwind CSS, JavaScript |
+| Authentication | Laravel Jetstream / Fortify |
+| Database | MySQL |
+| Email | Resend |
+| Payment Gateway | Duitku Sandbox |
+| Shipping API | RajaOngkir |
+| Deployment | Railway |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Screenshots
 
-## Code of Conduct
+Place screenshots inside:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```txt
+public/docs/screenshots
+```
 
-## Security Vulnerabilities
+Recommended files:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```txt
+public/docs/screenshots/landing-page.png
+public/docs/screenshots/auction-list.png
+public/docs/screenshots/auction-detail.png
+public/docs/screenshots/admin-products.png
+public/docs/screenshots/invoice-payment.png
+```
+
+### Landing Page
+
+![Landing Page](public/docs/screenshots/landing-page.png)
+
+### Auction List
+
+![Auction List](public/docs/screenshots/auction-list.png)
+
+### Auction Detail
+
+![Auction Detail](public/docs/screenshots/auction-detail.png)
+
+### Admin Product Management
+
+![Admin Product Management](public/docs/screenshots/admin-products.png)
+
+### Invoice and Payment
+
+![Invoice and Payment](public/docs/screenshots/invoice-payment.png)
+
+## Demo Account
+
+### Buyer Demo
+
+```txt
+Email    : demo@example.com
+Password : Demo12345!
+```
+
+### Admin Demo
+
+Admin access is available upon request.
+
+> Admin credentials are not publicly shared for security reasons.
+
+## Payment Testing
+
+This project uses Duitku Sandbox for payment testing.
+
+To simulate a successful payment in the sandbox environment, use:
+
+https://sandbox.duitku.com/payment/demo/demosuccesstransaction.aspx
+
+Payment flow:
+
+```txt
+User wins an auction
+→ Invoice is generated
+→ User proceeds to payment
+→ Duitku sandbox page is opened
+→ User simulates successful payment
+→ Payment status is updated
+```
+
+> No real payment transaction is processed in the demo environment.
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/byochiram/watch-auction-system.git
+cd watch-auction-system
+```
+
+Install dependencies:
+
+```bash
+composer install
+npm install
+```
+
+Copy environment file:
+
+```bash
+cp .env.example .env
+```
+
+Generate application key:
+
+```bash
+php artisan key:generate
+```
+
+Run migration and seeder:
+
+```bash
+php artisan migrate --seed
+```
+
+Create storage link:
+
+```bash
+php artisan storage:link
+```
+
+Build assets:
+
+```bash
+npm run build
+```
+
+Run development server:
+
+```bash
+php artisan serve
+```
+
+Open:
+
+```txt
+http://127.0.0.1:8000
+```
+
+## Environment Variables
+
+Configure these variables in `.env`:
+
+```env
+APP_NAME="Tempus Auctions"
+APP_URL=http://127.0.0.1:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=tempus_auctions
+DB_USERNAME=root
+DB_PASSWORD=
+
+MAIL_MAILER=resend
+RESEND_API_KEY=
+MAIL_FROM_ADDRESS=
+MAIL_FROM_NAME="Tempus Auctions"
+
+DUITKU_MERCHANT_CODE=
+DUITKU_API_KEY=
+DUITKU_CALLBACK_URL=
+DUITKU_RETURN_URL=
+DUITKU_MODE=sandbox
+
+RAJAONGKIR_API_KEY=
+RAJAONGKIR_ORIGIN_DISTRICT_ID=
+```
+
+> Do not commit real API keys, passwords, or production credentials to GitHub.
+
+## Deployment
+
+This project is deployed using Railway.
+
+Production setup includes:
+
+- Laravel web service
+- MySQL database service
+- Custom domain
+- Resend email API
+- Duitku Sandbox payment gateway
+- RajaOngkir shipping API
+- Railway volume for uploaded images
+- Laravel Scheduler for auction closing
+
+### Railway Build Command
+
+```bash
+npm run build
+```
+
+### Railway Pre-deploy Command
+
+```bash
+php artisan optimize:clear && php artisan migrate --force && php artisan db:seed --class=AdminSeeder --force && php artisan optimize
+```
+
+### Railway Start Command
+
+```bash
+mkdir -p storage/app/public/products && rm -rf public/storage && php artisan storage:link && php artisan serve --host=0.0.0.0 --port=$PORT
+```
+
+## Auction Scheduler
+
+Auction closing is handled using Laravel Scheduler.
+
+Recommended scheduler command:
+
+```bash
+php artisan schedule:run --verbose --no-interaction
+```
+
+Recommended Railway cron schedule:
+
+```txt
+*/5 * * * *
+```
+
+The scheduler checks ended auctions, determines the winner, generates invoice data, and sends notification email.
+
+## Future Improvements
+
+- Real-time bidding updates
+- Queue worker for background email processing
+- Invoice PDF generation
+- Cloudinary / S3 / Cloudflare R2 image storage
+- Payment reminder emails
+- Auction analytics dashboard
+- Audit log for admin actions
+- Automated testing
+
+## Author
+
+Developed by Naufal Zufar.
+
+GitHub: https://github.com/byochiram
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is developed for educational and portfolio purposes.
