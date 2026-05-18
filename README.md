@@ -1,47 +1,68 @@
 # Tempus Auctions
 
-Tempus Auctions is a Laravel-based watch auction platform built for Tempus Collective Indonesia.  
-The system supports user registration, email verification, product auctions, bidding flow, winner selection, invoice generation, payment gateway integration, and cloud deployment.
+Tempus Auctions is a web-based watch auction system built with Laravel.
+
+This project was developed as an undergraduate thesis project for PT. Tempus Collective Indonesia. The system supports online watch auctions, bidding, winner selection, invoice generation, payment processing, shipping cost calculation, and email notifications.
 
 ## Live Demo
 
 https://auctions.tempuscollective.com
 
-> Payment is configured using Duitku Sandbox for demo purposes.
+> Payment is configured using Duitku Sandbox for demo and testing purposes.
 
-## Features
+## Main Features
 
-### User
+### Public / Guest
 
-- Register and login
-- Email verification
-- Browse active watch auctions
+- View auction catalog
+- Search, filter, and sort auction lots
 - View auction details
-- Place bids
-- Add auction items to watchlist
-- Receive auction winner notification
-- View invoice and payment information
+- View guide and rules page
+- Register account
+- Login
+- Reset password
+
+### Bidder
+
+- Email verification
+- Manage profile
+- Add or remove auction lots from watchlist
+- Place bids on active auction lots
+- View real-time highest bid information
+- View auction countdown
+- View bidding history
+- View won or lost auction status
+- Checkout invoice after winning an auction
+- Manage shipping address
+- Calculate shipping cost
+- Complete payment through Duitku Sandbox
+- Confirm received shipment
 
 ### Admin
 
-- Manage products
-- Manage product images
+- Manage products and product images
 - Manage auction lots
+- Schedule, edit, cancel, and close auction lots
 - Monitor bids
-- Monitor invoices and payments
 - Manage users
+- Suspend or activate users
+- Resend email verification
+- Manage invoices and transactions
+- Input or update shipment tracking number
+- Monitor payment and shipment status
 
-### System
+### Notifications
 
-- Auction start and end time
-- Highest bid tracking
-- Winner selection
-- Invoice generation
-- Duitku Sandbox payment integration
-- Resend email integration
-- RajaOngkir shipping cost support
-- Railway deployment
-- Laravel Scheduler support for auction closing
+- Email verification
+- Password reset
+- Auction won
+- Auction lost
+- Auction cancelled
+- Payment reminder
+- Payment paid
+- Account suspended
+- Shipment on the way
+- Shipment received
 
 ## Tech Stack
 
@@ -51,10 +72,11 @@ https://auctions.tempuscollective.com
 | Frontend | Blade, Tailwind CSS, JavaScript |
 | Authentication | Laravel Jetstream / Fortify |
 | Database | MySQL |
-| Email | Resend |
+| Email Service | Resend |
 | Payment Gateway | Duitku Sandbox |
 | Shipping API | RajaOngkir |
 | Deployment | Railway |
+| Version Control | Git & GitHub |
 
 ## Screenshots
 
@@ -64,14 +86,15 @@ Place screenshots inside:
 public/docs/screenshots
 ```
 
-Recommended files:
+Recommended screenshots:
 
 ```txt
 public/docs/screenshots/landing-page.png
 public/docs/screenshots/auction-list.png
 public/docs/screenshots/auction-detail.png
-public/docs/screenshots/admin-products.png
 public/docs/screenshots/invoice-payment.png
+public/docs/screenshots/admin-dashboard.png
+public/docs/screenshots/admin-products.png
 ```
 
 ### Landing Page
@@ -86,13 +109,17 @@ public/docs/screenshots/invoice-payment.png
 
 ![Auction Detail](public/docs/screenshots/auction-detail.png)
 
-### Admin Product Management
-
-![Admin Product Management](public/docs/screenshots/admin-products.png)
-
 ### Invoice and Payment
 
 ![Invoice and Payment](public/docs/screenshots/invoice-payment.png)
+
+### Admin Dashboard
+
+![Admin Dashboard](public/docs/screenshots/admin-dashboard.png)
+
+### Admin Product Management
+
+![Admin Product Management](public/docs/screenshots/admin-products.png)
 
 ## Demo Account
 
@@ -102,6 +129,8 @@ public/docs/screenshots/invoice-payment.png
 Email    : demo@example.com
 Password : Demo12345!
 ```
+
+You may also register using your own email address to test the email verification flow.
 
 ### Admin Demo
 
@@ -115,7 +144,9 @@ This project uses Duitku Sandbox for payment testing.
 
 To simulate a successful payment in the sandbox environment, use:
 
+```txt
 https://sandbox.duitku.com/payment/demo/demosuccesstransaction.aspx
+```
 
 Payment flow:
 
@@ -123,9 +154,9 @@ Payment flow:
 User wins an auction
 → Invoice is generated
 → User proceeds to payment
-→ Duitku sandbox page is opened
+→ Duitku sandbox payment page is opened
 → User simulates successful payment
-→ Payment status is updated
+→ Payment callback or return flow updates the invoice status
 ```
 
 > No real payment transaction is processed in the demo environment.
@@ -146,7 +177,7 @@ composer install
 npm install
 ```
 
-Copy environment file:
+Copy the environment file:
 
 ```bash
 cp .env.example .env
@@ -156,6 +187,17 @@ Generate application key:
 
 ```bash
 php artisan key:generate
+```
+
+Configure the database in `.env`:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=tempus_auctions
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
 Run migration and seeder:
@@ -170,13 +212,13 @@ Create storage link:
 php artisan storage:link
 ```
 
-Build assets:
+Build frontend assets:
 
 ```bash
 npm run build
 ```
 
-Run development server:
+Run local development server:
 
 ```bash
 php artisan serve
@@ -190,33 +232,57 @@ http://127.0.0.1:8000
 
 ## Environment Variables
 
-Configure these variables in `.env`:
+Configure these variables in `.env`.
+
+### Application
 
 ```env
 APP_NAME="Tempus Auctions"
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
 APP_URL=http://127.0.0.1:8000
+```
 
+### Database
+
+```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=tempus_auctions
 DB_USERNAME=root
 DB_PASSWORD=
-
-MAIL_MAILER=resend
-RESEND_API_KEY=
-MAIL_FROM_ADDRESS=
-MAIL_FROM_NAME="Tempus Auctions"
-
-DUITKU_MERCHANT_CODE=
-DUITKU_API_KEY=
-DUITKU_CALLBACK_URL=
-DUITKU_RETURN_URL=
-DUITKU_MODE=sandbox
-
-RAJAONGKIR_API_KEY=
-RAJAONGKIR_ORIGIN_DISTRICT_ID=
 ```
+
+### Mail / Resend
+
+```env
+MAIL_MAILER=resend
+RESEND_API_KEY=your_resend_api_key
+MAIL_FROM_ADDRESS=noreply@example.com
+MAIL_FROM_NAME="Tempus Auctions"
+QUEUE_CONNECTION=sync
+```
+
+### Duitku Sandbox
+
+```env
+DUITKU_MERCHANT_CODE=your_duitku_merchant_code
+DUITKU_API_KEY=your_duitku_api_key
+DUITKU_CALLBACK_URL=http://127.0.0.1:8000/payment/callback
+DUITKU_RETURN_URL=http://127.0.0.1:8000/payment/return
+DUITKU_MODE=sandbox
+```
+
+### RajaOngkir
+
+```env
+RAJAONGKIR_API_KEY=your_rajaongkir_api_key
+RAJAONGKIR_ORIGIN_DISTRICT_ID=your_origin_district_id
+```
+
+> All API values must be filled with your own credentials from each provider. Real credentials are not included in this repository.
 
 ## Deployment
 
@@ -231,7 +297,7 @@ Production setup includes:
 - Duitku Sandbox payment gateway
 - RajaOngkir shipping API
 - Railway volume for uploaded images
-- Laravel Scheduler for auction closing
+- Laravel Scheduler support for auction closing
 
 ### Railway Build Command
 
@@ -255,6 +321,17 @@ mkdir -p storage/app/public/products && rm -rf public/storage && php artisan sto
 
 Auction closing is handled using Laravel Scheduler.
 
+The scheduler is responsible for:
+
+```txt
+Checking ended auction lots
+Selecting the highest bidder
+Updating auction status
+Generating invoice data
+Sending notification email
+Handling unpaid or expired invoices
+```
+
 Recommended scheduler command:
 
 ```bash
@@ -267,25 +344,33 @@ Recommended Railway cron schedule:
 */5 * * * *
 ```
 
-The scheduler checks ended auctions, determines the winner, generates invoice data, and sends notification email.
+## Security Notes
 
-## Future Improvements
+- Production debug mode is disabled
+- Real credentials are stored in environment variables
+- API keys and production secrets are not committed to GitHub
+- Admin credentials are not publicly shared
+- Payment gateway runs in sandbox mode for demo
+- Signed verification links are protected
 
-- Real-time bidding updates
-- Queue worker for background email processing
-- Invoice PDF generation
-- Cloudinary / S3 / Cloudflare R2 image storage
-- Payment reminder emails
-- Auction analytics dashboard
-- Audit log for admin actions
-- Automated testing
+## Developer
 
-## Author
+Developed by **Rosidah Rahmati**.
 
-Developed by Naufal Zufar.
+```txt
+Undergraduate Thesis Project
+Department of Informatics
+Faculty of Science and Mathematics
+Universitas Diponegoro
+2026
+```
 
-GitHub: https://github.com/byochiram
+## Repository
+
+```txt
+https://github.com/byochiram/watch-auction-system
+```
 
 ## License
 
-This project is developed for educational and portfolio purposes.
+This project is intended for academic final project documentation and portfolio purposes.
