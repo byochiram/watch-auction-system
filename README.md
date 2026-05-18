@@ -41,22 +41,6 @@ https://auctions.tempuscollective.com
 
 ## Screenshots
 
-Place screenshots inside this folder:
-
-```txt
-public/docs/screenshots
-```
-
-Recommended screenshot files:
-
-```txt
-public/docs/screenshots/landing-page.png
-public/docs/screenshots/auction-list.png
-public/docs/screenshots/auction-detail.png
-public/docs/screenshots/invoice-payment.png
-public/docs/screenshots/admin-dashboard.png
-```
-
 ### Landing Page
 
 ![Landing Page](public/docs/screenshots/landing-page.png)
@@ -68,14 +52,6 @@ public/docs/screenshots/admin-dashboard.png
 ### Auction Detail
 
 ![Auction Detail](public/docs/screenshots/auction-detail.png)
-
-### Invoice and Payment
-
-![Invoice and Payment](public/docs/screenshots/invoice-payment.png)
-
-### Admin Dashboard
-
-![Admin Dashboard](public/docs/screenshots/admin-dashboard.png)
 
 ## Demo Account
 
